@@ -21,7 +21,7 @@
   // If Its Enabled Logs Will Located in ../addons/counterstrikesharp/plugins/Chat_Logger/logs/
   "CLModeLogs": false,
 
-  // you can use these in Connect or Disconnect Message
+  // you can use these in LogChatFormat and LogDiscordChatFormat
   //{TIME} == Time
   //{DATE} == Date
   //{MESSAGE} == Player Message
