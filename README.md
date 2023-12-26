@@ -41,7 +41,7 @@
   //Send Log To Discord Via WebHookURL
   "SendLogToWebHook": false,
 
-  // you can use these in Connect or Disconnect Message
+  // you can use these in LogChatFormat and LogDiscordChatFormat
   //{TIME} == Time
   //{DATE} == Date
   //{MESSAGE} == Player Message
