@@ -53,7 +53,7 @@
 ## .:[ Change Log ]:.
 ```
 (1.0.1)
--Added {TIME} {DATE} {STEAMID3} {STEAMID32} To
+-Added {STEAMID3} {STEAMID32} To
 "LogChatFormat"
 "LogInsideFileTimeFormat"
 
