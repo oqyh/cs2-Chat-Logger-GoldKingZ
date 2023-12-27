@@ -1,4 +1,4 @@
-# [CS2] Chat-Logger (1.0.0)
+# [CS2] Chat-Logger (1.0.1)
 
 ### Log Any Chat Discord Or Log Text
 
@@ -19,18 +19,20 @@
 ```json
 {
   // If Its Enabled Logs Will Located in ../addons/counterstrikesharp/plugins/Chat_Logger/logs/
-  "CLModeLogs": false,
+  "SendLogToText": false,
 
   // you can use these in LogChatFormat and LogDiscordChatFormat
   //{TIME} == Time
   //{DATE} == Date
   //{MESSAGE} == Player Message
   //{PLAYERNAME} == Player Name Who Type In Chat
-  //{TEAM} == Check If Player Wrote In Chat Team Or Public Chat
+  //{TEAM} == Check If Player Wrote In Chat Team Or Public Chat [TEAM] [ALL]
   //{STEAMID} = STEAM_0:1:122910632
+  //{STEAMID3} = U:1:245821265
+  //{STEAMID32} = 245821265
   //{STEAMID64} = 76561198206086993
   //{IP} = 127.0.0.0
-  "LogChatFormat": "[{TIME}] {PLAYERNAME} {MESSAGE} (SteamID: {STEAMID})",
+  "LogChatFormat": "[{TIME}] {TEAM} [{PLAYERNAME}] {MESSAGE} (SteamID: {STEAMID})",
 
   // Log File Format .txt or .pdf ect...
   "LogFileFormat": ".txt",
@@ -40,18 +42,9 @@
 
   //Send Log To Discord Via WebHookURL
   "SendLogToWebHook": false,
-
-  // you can use these in LogChatFormat and LogDiscordChatFormat
-  //{TIME} == Time
-  //{DATE} == Date
-  //{MESSAGE} == Player Message
-  //{PLAYERNAME} == Player Name Who Type In Chat
-  //{TEAM} == Check If Player Wrote In Chat Team Or Public Chat
-  //{STEAMID} = STEAM_0:1:122910632
-  //{STEAMID64} = 76561198206086993
-  //{IP} = 127.0.0.0
-  "LogDiscordChatFormat": "[{DATE} - {TIME}] {TEAM} {PLAYERNAME} {MESSAGE} (IpAddress: {IP})",
   "WebHookURL": "https://discord.com/api/webhooks/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "LogDiscordChatFormat": "[{DATE} - {TIME}] {TEAM} {MESSAGE} (IpAddress: {IP})",
+
   "ConfigVersion": 1
 }
 ```
@@ -59,6 +52,13 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.1)
+-Added {TIME} {DATE} {STEAMID3} {STEAMID32} To
+"LogChatFormat"
+"LogInsideFileTimeFormat"
+-Fix Some Bugs
+-Fix Discord message now better style with link to steam
+
 (1.0.0)
 -Initial Release
 ```
