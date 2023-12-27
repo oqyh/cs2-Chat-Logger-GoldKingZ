@@ -56,6 +56,7 @@
 -Added {TIME} {DATE} {STEAMID3} {STEAMID32} To
 "LogChatFormat"
 "LogInsideFileTimeFormat"
+
 -Fix Some Bugs
 -Fix Discord message now better style with link to steam
 
