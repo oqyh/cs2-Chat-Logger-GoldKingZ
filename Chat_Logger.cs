@@ -21,7 +21,7 @@ public class ChatLoggerConfig : BasePluginConfig
 public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
 {
     public override string ModuleName => "Chat Logger";
-    public override string ModuleVersion => "1.0.1";
+    public override string ModuleVersion => "1.0.2";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Log Any Chat Discord Or Log Text";
     public ChatLoggerConfig Config { get; set; } = new ChatLoggerConfig();
@@ -97,7 +97,7 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
         var replacerlogDiscord = ReplaceMessages(Config.LogDiscordChatFormat,  Time,  Date,  trimmedMessage,  vplayername,  steamId2, steamId3, steamId32.ToString(), steamId64.ToString(), ipAddress.ToString(), chatteam ?? "[----]");
         if(Config.SendLogToWebHook)
         {
-            Task.Run(() => SendToDiscordWebhook(Config.WebHookURL, replacerlog, steamId64.ToString(), vplayername));
+            Task.Run(() => SendToDiscordWebhook(Config.WebHookURL, replacerlogDiscord, steamId64.ToString(), vplayername));
         }
 
         return HookResult.Continue;
@@ -162,7 +162,7 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
         var replacerlogDiscord = ReplaceMessages(Config.LogDiscordChatFormat,  Time,  Date,  trimmedMessage,  vplayername,  steamId2, steamId3, steamId32.ToString(), steamId64.ToString(), ipAddress.ToString(), chatteam ?? "[----]");
         if(Config.SendLogToWebHook)
         {
-            Task.Run(() => SendToDiscordWebhook(Config.WebHookURL, replacerlog, steamId64.ToString(), vplayername));
+            Task.Run(() => SendToDiscordWebhook(Config.WebHookURL, replacerlogDiscord, steamId64.ToString(), vplayername));
         }
 
         return HookResult.Continue;
