@@ -52,7 +52,7 @@
 
 ## .:[ Change Log ]:.
 ```
-(1.0.1)
+(1.0.2)
 -Fix "LogDiscordChatFormat"
 
 (1.0.1)
