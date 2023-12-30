@@ -1,4 +1,4 @@
-# [CS2] Chat-Logger (1.0.1)
+# [CS2] Chat-Logger (1.0.2)
 
 ### Log Any Chat Discord Or Log Text
 
@@ -52,6 +52,9 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.1)
+-Fix "LogDiscordChatFormat"
+
 (1.0.1)
 -Added {STEAMID3} {STEAMID32} To
 "LogChatFormat"
