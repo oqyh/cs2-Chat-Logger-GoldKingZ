@@ -7,11 +7,16 @@ namespace Chat_Logger;
 
 public class ChatLoggerConfig : BasePluginConfig
 {
+    [JsonPropertyName("ExcludeMessage")] public bool ExcludeMessage { get; set; } = false;
+    [JsonPropertyName("ExcludeMessageContains")] public string ExcludeMessageContains { get; set; } = "!./";
+
+
     [JsonPropertyName("SendLogToText")] public bool SendLogToText { get; set; } = false;
     [JsonPropertyName("LogChatFormat")] public string LogChatFormat { get; set; } = "[{TIME}] {TEAM} [{PLAYERNAME}] {MESSAGE} (SteamID: {STEAMID})";
     [JsonPropertyName("LogFileFormat")] public string LogFileFormat { get; set; } = ".txt";
     [JsonPropertyName("LogFileDateFormat")] public string LogFileDateFormat { get; set; } = "MM-dd-yyyy";
     [JsonPropertyName("LogInsideFileTimeFormat")] public string LogInsideFileTimeFormat { get; set; } = "HH:mm:ss";
+
 
     [JsonPropertyName("SendLogToWebHook")] public bool SendLogToWebHook { get; set; } = false;
     [JsonPropertyName("WebHookURL")] public string WebHookURL { get; set; } = "https://discord.com/api/webhooks/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
@@ -21,7 +26,7 @@ public class ChatLoggerConfig : BasePluginConfig
 public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
 {
     public override string ModuleName => "Chat Logger";
-    public override string ModuleVersion => "1.0.2";
+    public override string ModuleVersion => "1.0.3";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Log Any Chat Discord Or Log Text";
     public ChatLoggerConfig Config { get; set; } = new ChatLoggerConfig();
@@ -34,8 +39,8 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
     
     public override void Load(bool hotReload)
     {
-        AddCommandListener("say", OnPlayerSayPublic);
-        AddCommandListener("say_team", OnPlayerSayTeam);
+        AddCommandListener("say", OnPlayerSayPublic, HookMode.Post);
+        AddCommandListener("say_team", OnPlayerSayTeam, HookMode.Post);
     }
 
     private HookResult OnPlayerSayPublic(CCSPlayerController? player, CommandInfo info)
@@ -54,8 +59,10 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
         var message = info.GetArg(1);
 
         if (string.IsNullOrWhiteSpace(message)) return HookResult.Continue;
+        string trimmedMessage1 = message.TrimStart();
+        string trimmedMessage = trimmedMessage1.TrimEnd();
+        if(Config.ExcludeMessage && IsStringValid(trimmedMessage)) return HookResult.Continue;
 
-        string trimmedMessage = message.TrimStart();
         string Fpath = Path.Combine(ModuleDirectory,"../../plugins/Chat_Logger/logs/");
         string Time = DateTime.Now.ToString(Config.LogInsideFileTimeFormat);
         string Date = DateTime.Now.ToString(Config.LogFileDateFormat);
@@ -119,8 +126,10 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
         var message = info.GetArg(1);
 
         if (string.IsNullOrWhiteSpace(message)) return HookResult.Continue;
+        string trimmedMessage1 = message.TrimStart();
+        string trimmedMessage = trimmedMessage1.TrimEnd();
+        if(Config.ExcludeMessage && IsStringValid(trimmedMessage)) return HookResult.Continue;
 
-        string trimmedMessage = message.TrimStart();
         string Fpath = Path.Combine(ModuleDirectory,"../../plugins/Chat_Logger/logs/");
         string Time = DateTime.Now.ToString(Config.LogInsideFileTimeFormat);
         string Date = DateTime.Now.ToString(Config.LogFileDateFormat);
@@ -225,5 +234,14 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
     {
         return $"https://steamcommunity.com/profiles/{userId}";
     }
+    
+bool IsStringValid(string input)
+{
+    if (!string.IsNullOrEmpty(input) && !input.Contains(" ") && input.Any(c => Config.ExcludeMessageContains.Contains(c)) && !char.IsWhiteSpace(input.Last()))
+    {
+        return true;
+    }
+    return false;
+}
     
 }
