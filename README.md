@@ -1,4 +1,4 @@
-# [CS2] Chat-Logger (1.0.2)
+# [CS2] Chat-Logger (1.0.3)
 
 ### Log Any Chat Discord Or Log Text
 
@@ -18,6 +18,10 @@
 ## .:[ Configuration ]:.
 ```json
 {
+  // Exclude Message if begin "!" or "." or "/" but include if there is space between "!example example"
+  "ExcludeMessage": false,
+  "ExcludeMessageContains": "!./",
+
   // If Its Enabled Logs Will Located in ../addons/counterstrikesharp/plugins/Chat_Logger/logs/
   "SendLogToText": false,
 
@@ -52,6 +56,12 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.3)
+-Added "ExcludeMessage" 
+-Added "ExcludeMessageContains"
+
+-Fix "LogChatFormat" and "LogDiscordChatFormat" not log if other plugin touch "say" and "say_team" 
+
 (1.0.2)
 -Fix "LogDiscordChatFormat"
 
