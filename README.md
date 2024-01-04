@@ -1,6 +1,6 @@
-# [CS2] Chat-Logger (1.0.3)
+# [CS2] Chat-Logger (1.0.4)
 
-### Log Any Chat Discord Or Log Text
+### Log Any InGame Chat To Log Text Or Discord WebHook
 
 ![chat](https://github.com/oqyh/cs2-Chat-Logger/assets/48490385/1a57cca9-5892-4014-9587-6ab4f21480bb)
 ![log](https://github.com/oqyh/cs2-Chat-Logger/assets/48490385/b745d3e6-e78d-4d91-ab6e-e8cbd7864413)
@@ -18,12 +18,16 @@
 ## .:[ Configuration ]:.
 ```json
 {
-  // Exclude Message if begin "!" or "." or "/" but include if there is space between "!example example"
-  "ExcludeMessage": false,
+  //Exclude These Group From Logging
+  "ExcludeMessageGroups": "#css/vip1,#css/vip2,#css/vip3",
+  //Exclude Message if begin "!" or "." or "/"
   "ExcludeMessageContains": "!./",
+  //Exclude Message If Contains Less Than X Letters
+  "ExcludeMessageContainsLessThanXLetters": 0,
+  //Exclude Dublicated Messages
+  "ExcludeMessageDuplicate": false,
 
-  // If Its Enabled Logs Will Located in ../addons/counterstrikesharp/plugins/Chat_Logger/logs/
-  "SendLogToText": false,
+//-----------------------------------------------------------------------------------------
 
   // you can use these in LogChatFormat and LogDiscordChatFormat
   //{TIME} == Time
@@ -36,18 +40,36 @@
   //{STEAMID32} = 245821265
   //{STEAMID64} = 76561198206086993
   //{IP} = 127.0.0.0
-  "LogChatFormat": "[{TIME}] {TEAM} [{PLAYERNAME}] {MESSAGE} (SteamID: {STEAMID})",
 
-  // Log File Format .txt or .pdf ect...
+  //If Its Enabled Logs Will Located in ../addons/counterstrikesharp/plugins/Chat_Logger/logs/
+  "SendLogToText": true,
+  //How Message You Wanted To Be
+  "LogChatFormat": "[{TIME}] [{STEAMID}] {TEAM} ({PLAYERNAME}) {MESSAGE}",
+  //Log File Format .txt or .pdf ect...
   "LogFileFormat": ".txt",
-  // Date and Time Formate
+  //Date and Time Formate
   "LogFileDateFormat": "MM-dd-yyyy",
   "LogInsideFileTimeFormat": "HH:mm:ss",
+  //Auto Delete Logs If More Than X (Days) Old
+  "AutoDeleteLogsMoreThanXdaysOld": 0,
+
+//-----------------------------------------------------------------------------------------
 
   //Send Log To Discord Via WebHookURL
-  "SendLogToWebHook": false,
+  //SendLogToWebHook (1) = Text Only
+  //SendLogToWebHook (2) = Text With + Name + Hyperlink To Steam Profile
+  //SendLogToWebHook (3) = Text With + Name + Hyperlink To Steam Profile + Profile Picture (Must Put Vaild SteamApi)
+  "SendLogToWebHook": 0,
+  //If SendLogToWebHook (2) or SendLogToWebHook (3) How Would You Side Color Message To Be Check (https://www.color-hex.com/) For Colors
+  "SideColorMessage": "00FFFF",
+  //Steam Api Key To Pull Steam Profile Pictures To Print It in Discord WebHook (https://steamcommunity.com/dev/apikey)
+  "SteamApi": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  //Discord WebHook
   "WebHookURL": "https://discord.com/api/webhooks/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  //How Message You Wanted To Be
   "LogDiscordChatFormat": "[{DATE} - {TIME}] {TEAM} {MESSAGE} (IpAddress: {IP})",
+
+//-----------------------------------------------------------------------------------------
 
   "ConfigVersion": 1
 }
@@ -56,6 +78,17 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.4)
+-Added "ExcludeMessageGroups" 
+-Added "ExcludeMessageContainsLessThanXLetters"
+-Added "ExcludeMessageDuplicate"
+-Added "AutoDeleteLogsMoreThanXdaysOld"
+-Added "SendLogToWebHook" Mode 1/2/3
+-Added "SideColorMessage"
+-Added "SteamApi"
+
+-Fix Some Bugs
+
 (1.0.3)
 -Added "ExcludeMessage" 
 -Added "ExcludeMessageContains"
