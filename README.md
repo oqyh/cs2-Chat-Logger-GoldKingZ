@@ -1,4 +1,4 @@
-# [CS2] Chat-Logger (1.0.4)
+# [CS2] Chat-Logger (1.0.5)
 
 ### Log Any InGame Chat To Log Text Or Discord WebHook
 
@@ -58,12 +58,10 @@
   //Send Log To Discord Via WebHookURL
   //SendLogToWebHook (1) = Text Only
   //SendLogToWebHook (2) = Text With + Name + Hyperlink To Steam Profile
-  //SendLogToWebHook (3) = Text With + Name + Hyperlink To Steam Profile + Profile Picture (Must Put Vaild SteamApi)
+  //SendLogToWebHook (3) = Text With + Name + Hyperlink To Steam Profile + Profile Picture
   "SendLogToWebHook": 0,
   //If SendLogToWebHook (2) or SendLogToWebHook (3) How Would You Side Color Message To Be Check (https://www.color-hex.com/) For Colors
   "SideColorMessage": "00FFFF",
-  //Steam Api Key To Pull Steam Profile Pictures To Print It in Discord WebHook (https://steamcommunity.com/dev/apikey)
-  "SteamApi": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   //Discord WebHook
   "WebHookURL": "https://discord.com/api/webhooks/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   //How Message You Wanted To Be
@@ -78,6 +76,10 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.5)
+-Fix Some Bugs
+-Remove "SteamApi"
+
 (1.0.4)
 -Added "ExcludeMessageGroups" 
 -Added "ExcludeMessageContainsLessThanXLetters"
@@ -86,13 +88,11 @@
 -Added "SendLogToWebHook" Mode 1/2/3
 -Added "SideColorMessage"
 -Added "SteamApi"
-
 -Fix Some Bugs
 
 (1.0.3)
 -Added "ExcludeMessage" 
 -Added "ExcludeMessageContains"
-
 -Fix "LogChatFormat" and "LogDiscordChatFormat" not log if other plugin touch "say" and "say_team" 
 
 (1.0.2)
@@ -102,7 +102,6 @@
 -Added {STEAMID3} {STEAMID32} To
 "LogChatFormat"
 "LogInsideFileTimeFormat"
-
 -Fix Some Bugs
 -Fix Discord message now better style with link to steam
 
