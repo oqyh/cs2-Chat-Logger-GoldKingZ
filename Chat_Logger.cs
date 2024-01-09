@@ -4,8 +4,6 @@ using System.Text.Json.Serialization;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Admin;
-using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Modules.Config;
 
 namespace Chat_Logger;
 
@@ -27,7 +25,6 @@ public class ChatLoggerConfig : BasePluginConfig
 
     [JsonPropertyName("SendLogToWebHook")] public int SendLogToWebHook { get; set; } = 0;
     [JsonPropertyName("SideColorMessage")] public string SideColorMessage { get; set; } = "00FFFF";
-    [JsonPropertyName("SteamApi")] public string SteamApi { get; set; } = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
     [JsonPropertyName("WebHookURL")] public string WebHookURL { get; set; } = "https://discord.com/api/webhooks/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
     [JsonPropertyName("LogDiscordChatFormat")] public string LogDiscordChatFormat { get; set; } = "[{DATE} - {TIME}] {TEAM} {MESSAGE} (IpAddress: {IP})";
 }
@@ -35,10 +32,11 @@ public class ChatLoggerConfig : BasePluginConfig
 public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
 {
     public override string ModuleName => "Chat Logger";
-    public override string ModuleVersion => "1.0.4";
+    public override string ModuleVersion => "1.0.5";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "Log Any InGame Chat To Log Text Or Discord WebHook";
     private static readonly HttpClient _httpClient = new HttpClient();
+    private static readonly HttpClient httpClient = new HttpClient();
     public ChatLoggerConfig Config { get; set; } = new ChatLoggerConfig();
     private Dictionary<int, bool> BteamChat = new Dictionary<int, bool>();
     static string firstMessage = "";
@@ -50,7 +48,19 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
         if (Config.SendLogToWebHook < 0 || Config.SendLogToWebHook > 3)
         {
             config.SendLogToWebHook = 0;
+            Console.WriteLine("|||||||||||||||||||||||||||||||||||| I N V A L I D ||||||||||||||||||||||||||||||||||||");
             Console.WriteLine("SendLogToWebHook: is invalid, setting to default value (0) Please Choose 0 or 1 or 2 or 3.");
+            Console.WriteLine("SendLogToWebHook (0) = Disableis invalid");
+            Console.WriteLine("SendLogToWebHook (1) = Text Only");
+            Console.WriteLine("SendLogToWebHook (2) = Text With + Name + Hyperlink To Steam Profile");
+            Console.WriteLine("SendLogToWebHook (3) = Text With + Name + Hyperlink To Steam Profile + Profile Picture");
+            Console.WriteLine("|||||||||||||||||||||||||||||||||||| I N V A L I D ||||||||||||||||||||||||||||||||||||");
+        }
+        
+        if (Config.SideColorMessage.StartsWith("#"))
+        {
+            Config.SideColorMessage = Config.SideColorMessage.Substring(1);
+            //Console.WriteLine("SideColorMessage: # Detect At Start No Need For That");
         }
     }
     
@@ -68,10 +78,9 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
 
     private HookResult OnPlayerSayPublic(CCSPlayerController? player, CommandInfo info)
 	{
-        if (player == null || !player.IsValid || player.IsBot || player.IsHLTV || player.AuthorizedSteamID == null|| player.IpAddress == null)return HookResult.Continue;
+        if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)return HookResult.Continue;
         
         string? chatteam = null;
-
         if (player.UserId.HasValue)
         {
             BteamChat[player.UserId.Value] = false;
@@ -100,17 +109,17 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
         string Tpath = Path.Combine(ModuleDirectory,"../../plugins/Chat_Logger/logs/") + $"{fileName}";
 
         var vplayername = player.PlayerName;
-        var steamId2 = player.AuthorizedSteamID.SteamId2;
-        var steamId3 = player.AuthorizedSteamID.SteamId3;
-        var steamId32 = player.AuthorizedSteamID.SteamId32;
-        var steamId64 = player.AuthorizedSteamID.SteamId64;
+        var steamId2 = (player.AuthorizedSteamID != null) ? player.AuthorizedSteamID.SteamId2 : "InvalidSteamID";
+        var steamId3 = (player.AuthorizedSteamID != null) ? player.AuthorizedSteamID.SteamId3 : "InvalidSteamID";
+        var steamId32 = (player.AuthorizedSteamID != null) ? player.AuthorizedSteamID.SteamId32.ToString() : "InvalidSteamID";
+        var steamId64 = (player.AuthorizedSteamID != null) ? player.AuthorizedSteamID.SteamId64.ToString() : "InvalidSteamID";
         var GetIpAddress = player.IpAddress;
-        var ipAddress = GetIpAddress.Split(':')[0];
+        var ipAddress = GetIpAddress?.Split(':')[0] ?? "InValidIpAddress";
         secondMessage = firstMessage;
         firstMessage = trimmedMessage;
 
         if(Config.ExcludeMessageDuplicate && secondMessage == firstMessage) return HookResult.Continue;
-        
+
         if(Config.SendLogToText && !Directory.Exists(Fpath))
         {
             Directory.CreateDirectory(Fpath);
@@ -134,9 +143,9 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
                 Console.WriteLine("|||||||||||||||||||||||||||||| E R R O R ||||||||||||||||||||||||||||||");
             }
         }
-
+        
         var replacerlogDiscord = ReplaceMessages(Config.LogDiscordChatFormat,  Time,  Date,  trimmedMessage,  vplayername,  steamId2, steamId3, steamId32.ToString(), steamId64.ToString(), ipAddress.ToString(), chatteam ?? "[----]");
-
+        
         if(Config.SendLogToWebHook == 1)
         {
             _ = SendToDiscordWebhookNormal(Config.WebHookURL, replacerlogDiscord);
@@ -155,10 +164,9 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
 
     private HookResult OnPlayerSayTeam(CCSPlayerController? player, CommandInfo info)
 	{
-        if (player == null || !player.IsValid || player.IsBot || player.IsHLTV || player.AuthorizedSteamID == null|| player.IpAddress == null)return HookResult.Continue;
+        if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)return HookResult.Continue;
         
         string? chatteam = null;
-
         if (player.UserId.HasValue)
         {
             BteamChat[player.UserId.Value] = true;
@@ -187,12 +195,12 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
         string Tpath = Path.Combine(ModuleDirectory,"../../plugins/Chat_Logger/logs/") + $"{fileName}";
 
         var vplayername = player.PlayerName;
-        var steamId2 = player.AuthorizedSteamID.SteamId2;
-        var steamId3 = player.AuthorizedSteamID.SteamId3;
-        var steamId32 = player.AuthorizedSteamID.SteamId32;
-        var steamId64 = player.AuthorizedSteamID.SteamId64;
+        var steamId2 = (player.AuthorizedSteamID != null) ? player.AuthorizedSteamID.SteamId2 : "InvalidSteamID";
+        var steamId3 = (player.AuthorizedSteamID != null) ? player.AuthorizedSteamID.SteamId3 : "InvalidSteamID";
+        var steamId32 = (player.AuthorizedSteamID != null) ? player.AuthorizedSteamID.SteamId32.ToString() : "InvalidSteamID";
+        var steamId64 = (player.AuthorizedSteamID != null) ? player.AuthorizedSteamID.SteamId64.ToString() : "InvalidSteamID";
         var GetIpAddress = player.IpAddress;
-        var ipAddress = GetIpAddress.Split(':')[0];
+        var ipAddress = GetIpAddress?.Split(':')[0] ?? "InValidIpAddress";
         secondMessage = firstMessage;
         firstMessage = trimmedMessage;
 
@@ -318,7 +326,7 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
         try
         {
             string profileLink = GetSteamProfileLink(steamUserId);
-            string profilePictureUrl = await GetSteamProfilePicture(steamUserId, Config.SteamApi);
+            string profilePictureUrl = await GetProfilePictureAsync(steamUserId);
             int colorss = int.Parse(Config.SideColorMessage, System.Globalization.NumberStyles.HexNumber);
             Color color = Color.FromArgb(colorss >> 16, (colorss >> 8) & 0xFF, colorss & 0xFF);
             using (var httpClient = new HttpClient())
@@ -356,29 +364,38 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
             Console.WriteLine($"Exception: {ex.Message}");
         }
     }
-    static string GetSteamProfileLink(string userId)
-    {
-        return $"https://steamcommunity.com/profiles/{userId}";
-    }
-    static async Task<string> GetSteamProfilePicture(string userId, string APIKEY)
+    private static async Task<string> GetProfilePictureAsync(string steamId64)
     {
         try
         {
-            using (HttpClient client = new HttpClient())
-            {
-                string apiUrl = $"https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={APIKEY}&steamids={userId}";
-                var response = await client.GetStringAsync(apiUrl);
-                dynamic jsonResponse = Newtonsoft.Json.JsonConvert.DeserializeObject(response)!;
+            string apiUrl = $"https://steamcommunity.com/profiles/{steamId64}/?xml=1";
+            
+            HttpResponseMessage response = await httpClient.GetAsync(apiUrl);
 
-                string profilePictureUrl = jsonResponse.response.players[0].avatarfull;
+            if (response.IsSuccessStatusCode)
+            {
+                string xmlResponse = await response.Content.ReadAsStringAsync();
+                int startIndex = xmlResponse.IndexOf("<avatarFull><![CDATA[") + "<avatarFull><![CDATA[".Length;
+                int endIndex = xmlResponse.IndexOf("]]></avatarFull>", startIndex);
+                string profilePictureUrl = xmlResponse.Substring(startIndex, endIndex - startIndex);
+
                 return profilePictureUrl;
+            }
+            else
+            {
+                Console.WriteLine($"Error: {response.StatusCode} - {response.ReasonPhrase}");
+                return null!;
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Exception: {ex.Message}");
-            return string.Empty;
+            return null!;
         }
+    }
+    static string GetSteamProfileLink(string userId)
+    {
+        return $"https://steamcommunity.com/profiles/{userId}";
     }
     static int CountLetters(string input)
     {
