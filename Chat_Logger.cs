@@ -4,12 +4,15 @@ using System.Text.Json.Serialization;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API;
 
 namespace Chat_Logger;
 
 public class ChatLoggerConfig : BasePluginConfig
 {
-    [JsonPropertyName("ExcludeMessageGroups")] public string ExcludeMessageGroups { get; set; } = "#css/vip1,#css/vip2,#css/vip3";
+    [JsonPropertyName("IncludeMessageGroups")] public string IncludeMessageGroups { get; set; } = "";
+
+    [JsonPropertyName("ExcludeMessageGroups")] public string ExcludeMessageGroups { get; set; } = "#css/vip1,@css/vip1";
     [JsonPropertyName("ExcludeMessageContains")] public string ExcludeMessageContains { get; set; } = "!./";
     [JsonPropertyName("ExcludeMessageContainsLessThanXLetters")] public int ExcludeMessageContainsLessThanXLetters { get; set; } = 0;
     [JsonPropertyName("ExcludeMessageDuplicate")] public bool ExcludeMessageDuplicate { get; set; } = false;
@@ -27,18 +30,21 @@ public class ChatLoggerConfig : BasePluginConfig
     [JsonPropertyName("SideColorMessage")] public string SideColorMessage { get; set; } = "00FFFF";
     [JsonPropertyName("WebHookURL")] public string WebHookURL { get; set; } = "https://discord.com/api/webhooks/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
     [JsonPropertyName("LogDiscordChatFormat")] public string LogDiscordChatFormat { get; set; } = "[{DATE} - {TIME}] {TEAM} {MESSAGE} (IpAddress: {IP})";
+    [JsonPropertyName("UsersWithNoAvatarImage")] public string UsersWithNoAvatarImage { get; set; } = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/b5/b5bd56c1aa4644a474a2e4972be27ef9e82e517e_full.jpg";
 }
 
 public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
 {
-    public override string ModuleName => "Chat Logger";
-    public override string ModuleVersion => "1.0.5";
+    public override string ModuleName => "Chat Logger (Log Chat To Text Or Discord WebHook)";
+    public override string ModuleVersion => "1.0.6";
     public override string ModuleAuthor => "Gold KingZ";
-    public override string ModuleDescription => "Log Any InGame Chat To Log Text Or Discord WebHook";
+    public override string ModuleDescription => "https://github.com/oqyh/cs2-Chat-Logger";
     private static readonly HttpClient _httpClient = new HttpClient();
     private static readonly HttpClient httpClient = new HttpClient();
     public ChatLoggerConfig Config { get; set; } = new ChatLoggerConfig();
     private Dictionary<int, bool> BteamChat = new Dictionary<int, bool>();
+    private Dictionary<ulong, bool> PlayerIsExcluded = new Dictionary<ulong, bool>();
+    private Dictionary<ulong, bool> PlayerIsIncluded = new Dictionary<ulong, bool>();
     static string firstMessage = "";
     static string secondMessage = "";
     public void OnConfigParsed(ChatLoggerConfig config)
@@ -66,14 +72,69 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
     
     public override void Load(bool hotReload)
     {
+        RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
+        RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
+        RegisterListener<Listeners.OnMapEnd>(OnMapEnd);
         AddCommandListener("say", OnPlayerSayPublic, HookMode.Post);
         AddCommandListener("say_team", OnPlayerSayTeam, HookMode.Post);
-
+        RegisterListener<Listeners.OnMapStart>(OnMapStart);
+    }
+    private void OnMapStart(string Map)
+    {
         if(Config.AutoDeleteLogsMoreThanXdaysOld > 0)
         {
             string Fpath = Path.Combine(ModuleDirectory,"../../plugins/Chat_Logger/logs");
             DeleteOldFiles(Fpath, "*" + Config.LogFileFormat, TimeSpan.FromDays(Config.AutoDeleteLogsMoreThanXdaysOld));
         }
+    }
+    private HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
+    {
+        if (@event == null)return HookResult.Continue;
+        var player = @event.Userid;
+        if (player == null || !player.IsValid || player.IsBot || player.IsHLTV) return HookResult.Continue;
+        var playerid = player.SteamID;
+
+        if(!string.IsNullOrEmpty(Config.ExcludeMessageGroups))
+        {
+            if(IsPlayerInGroupPermissionExcluded(player))
+            {
+                if (!PlayerIsExcluded.ContainsKey(playerid))
+                {
+                    PlayerIsExcluded.Add(playerid, true);
+                }
+            }
+        }
+
+        if(!string.IsNullOrEmpty(Config.IncludeMessageGroups))
+        {
+            if(IsPlayerInGroupPermissionIncluded(player))
+            {
+                if (!PlayerIsIncluded.ContainsKey(playerid))
+                {
+                    PlayerIsIncluded.Add(playerid, true);
+                }
+            }
+        }
+
+        return HookResult.Continue;
+    }
+    private HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
+    {
+        if (@event == null) return HookResult.Continue;
+        var player = @event.Userid;
+        if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)return HookResult.Continue;
+        var playerid = player.SteamID;
+
+        if (PlayerIsExcluded.ContainsKey(playerid))
+        {
+            PlayerIsExcluded.Remove(playerid);
+        }
+
+        if (PlayerIsIncluded.ContainsKey(playerid))
+        {
+            PlayerIsIncluded.Remove(playerid);
+        }
+        return HookResult.Continue;
     }
 
     private HookResult OnPlayerSayPublic(CCSPlayerController? player, CommandInfo info)
@@ -89,11 +150,16 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
         }
 
         var message = info.GetArg(1);
+        var playerid = player.SteamID;
 
         if (string.IsNullOrWhiteSpace(message)) return HookResult.Continue;
         string trimmedMessage1 = message.TrimStart();
         string trimmedMessage = trimmedMessage1.TrimEnd();
-        if (!string.IsNullOrEmpty(Config.ExcludeMessageGroups) && AdminManager.PlayerInGroup(player, IsAnyGroupValid(Config.ExcludeMessageGroups).ToString()))
+        if (!string.IsNullOrEmpty(Config.ExcludeMessageGroups) && PlayerIsExcluded.ContainsKey(playerid))
+        {
+            return HookResult.Continue;
+        }
+        if (!string.IsNullOrEmpty(Config.IncludeMessageGroups) && !PlayerIsIncluded.ContainsKey(playerid))
         {
             return HookResult.Continue;
         }
@@ -138,14 +204,14 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
                 File.AppendAllLines(Tpath, new[]{replacerlog});
             }catch
             {
-                Console.WriteLine("|||||||||||||||||||||||||||||| E R R O R ||||||||||||||||||||||||||||||");
-                Console.WriteLine("[Error Cant Write] Please Give Chat_Logger.dll Permissions To Write");
-                Console.WriteLine("|||||||||||||||||||||||||||||| E R R O R ||||||||||||||||||||||||||||||");
+                Console.WriteLine("|||||||||||||||||||||||||||||| E R R O R |||||||||||||||||||||");
+                Console.WriteLine("[Chat_Logger] Please Give Chat_Logger.dll Permissions To Write");
+                Console.WriteLine("[Chat_Logger] If You Already Did Restart The Server");
+                Console.WriteLine("|||||||||||||||||||||||||||||| E R R O R |||||||||||||||||||||");
             }
         }
         
         var replacerlogDiscord = ReplaceMessages(Config.LogDiscordChatFormat,  Time,  Date,  trimmedMessage,  vplayername,  steamId2, steamId3, steamId32.ToString(), steamId64.ToString(), ipAddress.ToString(), chatteam ?? "[----]");
-        
         if(Config.SendLogToWebHook == 1)
         {
             _ = SendToDiscordWebhookNormal(Config.WebHookURL, replacerlogDiscord);
@@ -175,11 +241,16 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
         }
 
         var message = info.GetArg(1);
+        var playerid = player.SteamID;
 
         if (string.IsNullOrWhiteSpace(message)) return HookResult.Continue;
         string trimmedMessage1 = message.TrimStart();
         string trimmedMessage = trimmedMessage1.TrimEnd();
-        if (!string.IsNullOrEmpty(Config.ExcludeMessageGroups) && AdminManager.PlayerInGroup(player, IsAnyGroupValid(Config.ExcludeMessageGroups).ToString()))
+        if (!string.IsNullOrEmpty(Config.ExcludeMessageGroups) && PlayerIsExcluded.ContainsKey(playerid))
+        {
+            return HookResult.Continue;
+        }
+        if (!string.IsNullOrEmpty(Config.IncludeMessageGroups) && !PlayerIsIncluded.ContainsKey(playerid))
         {
             return HookResult.Continue;
         }
@@ -224,14 +295,14 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
                 File.AppendAllLines(Tpath, new[]{replacerlog});
             }catch
             {
-                Console.WriteLine("|||||||||||||||||||||||||||||| E R R O R ||||||||||||||||||||||||||||||");
-                Console.WriteLine("[Error Cant Write] Please Give Chat_Logger.dll Permissions To Write");
-                Console.WriteLine("|||||||||||||||||||||||||||||| E R R O R ||||||||||||||||||||||||||||||");
+                Console.WriteLine("|||||||||||||||||||||||||||||| E R R O R |||||||||||||||||||||");
+                Console.WriteLine("[Chat_Logger] Please Give Chat_Logger.dll Permissions To Write");
+                Console.WriteLine("[Chat_Logger] If You Already Did Restart The Server");
+                Console.WriteLine("|||||||||||||||||||||||||||||| E R R O R |||||||||||||||||||||");
             }
         }
         
         var replacerlogDiscord = ReplaceMessages(Config.LogDiscordChatFormat,  Time,  Date,  trimmedMessage,  vplayername,  steamId2, steamId3, steamId32.ToString(), steamId64.ToString(), ipAddress.ToString(), chatteam ?? "[----]");
-        
         if(Config.SendLogToWebHook == 1)
         {
             _ = SendToDiscordWebhookNormal(Config.WebHookURL, replacerlogDiscord);
@@ -269,17 +340,11 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
             var payload = new { content = message };
             var jsonPayload = Newtonsoft.Json.JsonConvert.SerializeObject(payload);
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync(webhookUrl, content).ConfigureAwait(false);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.WriteLine($"Failed to send message. Status code: {response.StatusCode}, Response: {await response.Content.ReadAsStringAsync()}");
-            }
+            var response = await _httpClient.PostAsync(webhookUrl, content).ConfigureAwait(false); 
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Exception: {ex.Message}");
+
         }
     }
 
@@ -309,16 +374,11 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
                 var jsonPayload = Newtonsoft.Json.JsonConvert.SerializeObject(payload);
                 var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                 var response = await _httpClient.PostAsync(webhookUrl, content).ConfigureAwait(false);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine($"Failed to send message. Status code: {response.StatusCode}, Response: {await response.Content.ReadAsStringAsync()}");
-                }
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Exception: {ex.Message}");
+
         }
     }
     public async Task SendToDiscordWebhookNameLinkWithPicture(string webhookUrl, string message, string steamUserId, string STEAMNAME)
@@ -326,7 +386,7 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
         try
         {
             string profileLink = GetSteamProfileLink(steamUserId);
-            string profilePictureUrl = await GetProfilePictureAsync(steamUserId);
+            string profilePictureUrl = await GetProfilePictureAsync(steamUserId, Config.UsersWithNoAvatarImage);
             int colorss = int.Parse(Config.SideColorMessage, System.Globalization.NumberStyles.HexNumber);
             Color color = Color.FromArgb(colorss >> 16, (colorss >> 8) & 0xFF, colorss & 0xFF);
             using (var httpClient = new HttpClient())
@@ -352,24 +412,19 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
                 var jsonPayload = Newtonsoft.Json.JsonConvert.SerializeObject(payload);
                 var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                 var response = await _httpClient.PostAsync(webhookUrl, content).ConfigureAwait(false);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine($"Failed to send message. Status code: {response.StatusCode}, Response: {await response.Content.ReadAsStringAsync()}");
-                }
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Exception: {ex.Message}");
+
         }
     }
-    private static async Task<string> GetProfilePictureAsync(string steamId64)
+    public static async Task<string> GetProfilePictureAsync(string steamId64, string defaultImage)
     {
         try
         {
             string apiUrl = $"https://steamcommunity.com/profiles/{steamId64}/?xml=1";
-            
+
             HttpResponseMessage response = await httpClient.GetAsync(apiUrl);
 
             if (response.IsSuccessStatusCode)
@@ -377,19 +432,24 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
                 string xmlResponse = await response.Content.ReadAsStringAsync();
                 int startIndex = xmlResponse.IndexOf("<avatarFull><![CDATA[") + "<avatarFull><![CDATA[".Length;
                 int endIndex = xmlResponse.IndexOf("]]></avatarFull>", startIndex);
-                string profilePictureUrl = xmlResponse.Substring(startIndex, endIndex - startIndex);
 
-                return profilePictureUrl;
+                if (endIndex >= 0)
+                {
+                    string profilePictureUrl = xmlResponse.Substring(startIndex, endIndex - startIndex);
+                    return profilePictureUrl;
+                }
+                else
+                {
+                    return defaultImage;
+                }
             }
             else
             {
-                Console.WriteLine($"Error: {response.StatusCode} - {response.ReasonPhrase}");
                 return null!;
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Exception: {ex.Message}");
             return null!;
         }
     }
@@ -460,12 +520,65 @@ public class ChatLogger : BasePlugin, IPluginConfig<ChatLoggerConfig>
             }
             else
             {
-                Console.WriteLine($"Directory not found: {folderPath}");
+                //Console.WriteLine($"Directory not found: {folderPath}");
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            
         }
+    }
+    private bool IsPlayerInGroupPermissionExcluded(CCSPlayerController player)
+    {
+        string[] excludedGroups = Config.ExcludeMessageGroups.Split(',');
+        foreach (string group in excludedGroups)
+        {
+            if (group.StartsWith("#"))
+            {
+                if (AdminManager.PlayerInGroup(player, group))
+                {
+                    return true;
+                }
+            }else if (group.StartsWith("@"))
+            {
+                if (AdminManager.PlayerHasPermissions(player, group))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    private bool IsPlayerInGroupPermissionIncluded(CCSPlayerController player)
+    {
+        string[] excludedGroups = Config.IncludeMessageGroups.Split(',');
+        foreach (string group in excludedGroups)
+        {
+            if (group.StartsWith("#"))
+            {
+                if (AdminManager.PlayerInGroup(player, group))
+                {
+                    return true;
+                }
+            }else if (group.StartsWith("@"))
+            {
+                if (AdminManager.PlayerHasPermissions(player, group))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    private void OnMapEnd()
+    {
+        PlayerIsIncluded.Clear();
+        PlayerIsExcluded.Clear();
+    }
+
+    public override void Unload(bool hotReload)
+    {
+        PlayerIsIncluded.Clear();
+        PlayerIsExcluded.Clear();
     }
 }
