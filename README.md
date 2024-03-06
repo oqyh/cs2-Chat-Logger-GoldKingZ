@@ -1,4 +1,4 @@
-# [CS2] Chat-Logger (1.0.5)
+# [CS2] Chat-Logger (1.0.6)
 
 ### Log Any InGame Chat To Log Text Or Discord WebHook
 
@@ -18,8 +18,10 @@
 ## .:[ Configuration ]:.
 ```json
 {
+  //Include These Group From Logging Only "" Means Everyone
+  "IncludeMessageGroups": "",
   //Exclude These Group From Logging
-  "ExcludeMessageGroups": "#css/vip1,#css/vip2,#css/vip3",
+  "ExcludeMessageGroups": "#css/vip1,@css/vip1",
   //Exclude Message if begin "!" or "." or "/"
   "ExcludeMessageContains": "!./",
   //Exclude Message If Contains Less Than X Letters
@@ -61,12 +63,14 @@
   //SendLogToWebHook (3) = Text With + Name + Hyperlink To Steam Profile + Profile Picture
   "SendLogToWebHook": 0,
   //If SendLogToWebHook (2) or SendLogToWebHook (3) How Would You Side Color Message To Be Check (https://www.color-hex.com/) For Colors
-  "SideColorMessage": "00FFFF",
+  "SideColorMessage": "#00FFFF",
   //Discord WebHook
   "WebHookURL": "https://discord.com/api/webhooks/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   //How Message You Wanted To Be
   "LogDiscordChatFormat": "[{DATE} - {TIME}] {TEAM} {MESSAGE} (IpAddress: {IP})",
-
+  //If Player Doesnt Have Profile Picture
+  "UsersWithNoAvatarImage": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/b5/b5bd56c1aa4644a474a2e4972be27ef9e82e517e_full.jpg",
+  
 //-----------------------------------------------------------------------------------------
 
   "ConfigVersion": 1
@@ -76,6 +80,13 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.6)
+-Fix Some Bugs
+-Fix AutoDeleteLogsMoreThanXdaysOld
+-Fix SendLogToWebHook (3) For No Avatar Users
+-Added IncludeMessageGroups
+-Added UsersWithNoAvatarImage
+
 (1.0.5)
 -Fix Some Bugs
 -Remove "SteamApi"
