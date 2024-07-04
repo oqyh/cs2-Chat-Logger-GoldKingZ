@@ -1,3 +1,8 @@
+## .:[ Join Our Discord For Support ]:.
+
+![Discord Banner 2](https://discord.com/api/guilds/651838917687115806/widget.png?style=banner2)
+
+***
 # [CS2] Chat-Logger-GoldKingZ (1.0.7)
 
 ### Log InGame Chat And Send It To Log Text Or Discord WebHook
