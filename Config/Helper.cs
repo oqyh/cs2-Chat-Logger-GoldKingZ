@@ -58,15 +58,20 @@ public class Helper
         var excludedGroups = groups.Split(',');
         foreach (var group in excludedGroups)
         {
-            if (group.StartsWith("#"))
+            switch (group[0])
             {
-                if (AdminManager.PlayerInGroup(player, group))
-                    return true;
-            }
-            else if (group.StartsWith("@"))
-            {
-                if (AdminManager.PlayerHasPermissions(player, group))
-                    return true;
+                case '#':
+                    if (AdminManager.PlayerInGroup(player, group))
+                        return true;
+                    break;
+
+                case '@':
+                    if (AdminManager.PlayerHasPermissions(player, group))
+                        return true;
+                    break;
+
+                default:
+                    return false;
             }
         }
         return false;
@@ -93,32 +98,31 @@ public class Helper
 
         return count;
     }
-    public static List<CCSPlayerController> GetCounterTerroristController() 
+    public static List<CCSPlayerController> GetPlayersController(bool IncludeBots = false, bool IncludeSPEC = true, bool IncludeCT = true, bool IncludeT = true) 
     {
-        var playerList = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller").Where(p => p != null && p.IsValid && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && p.Team == CsTeam.CounterTerrorist).ToList();
+        var playerList = Utilities
+            .FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller")
+            .Where(p => p != null && p.IsValid && 
+                        (IncludeBots || (!p.IsBot && !p.IsHLTV)) && 
+                        p.Connected == PlayerConnectedState.PlayerConnected && 
+                        ((IncludeCT && p.TeamNum == (byte)CsTeam.CounterTerrorist) || 
+                        (IncludeT && p.TeamNum == (byte)CsTeam.Terrorist) || 
+                        (IncludeSPEC && p.TeamNum == (byte)CsTeam.Spectator)))
+            .ToList();
+
         return playerList;
     }
-    public static List<CCSPlayerController> GetTerroristController() 
+    public static int GetPlayersCount(bool IncludeBots = false, bool IncludeSPEC = true, bool IncludeCT = true, bool IncludeT = true)
     {
-        var playerList = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller").Where(p => p != null && p.IsValid && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && p.Team == CsTeam.Terrorist).ToList();
-        return playerList;
-    }
-    public static List<CCSPlayerController> GetAllController() 
-    {
-        var playerList = Utilities.FindAllEntitiesByDesignerName<CCSPlayerController>("cs_player_controller").Where(p => p != null && p.IsValid && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected).ToList();
-        return playerList;
-    }
-    public static int GetCounterTerroristCount()
-    {
-        return Utilities.GetPlayers().Count(p => p != null && p.IsValid && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && p.TeamNum == (byte)CsTeam.CounterTerrorist);
-    }
-    public static int GetTerroristCount()
-    {
-        return Utilities.GetPlayers().Count(p => p != null && p.IsValid && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && p.TeamNum == (byte)CsTeam.Terrorist);
-    }
-    public static int GetAllCount()
-    {
-        return Utilities.GetPlayers().Count(p => p != null && p.IsValid && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected);
+        return Utilities.GetPlayers().Count(p => 
+            p != null && 
+            p.IsValid && 
+            p.Connected == PlayerConnectedState.PlayerConnected && 
+            (IncludeBots || (!p.IsBot && !p.IsHLTV)) && 
+            ((IncludeCT && p.TeamNum == (byte)CsTeam.CounterTerrorist) || 
+            (IncludeT && p.TeamNum == (byte)CsTeam.Terrorist) || 
+            (IncludeSPEC && p.TeamNum == (byte)CsTeam.Spectator))
+        );
     }
     
     public static string ReplaceMessages(string Message, string time, string date, string message, string PlayerName, string SteamId, string SteamId3, string SteamId32, string SteamId64, string IPaddress, string chatteam)
@@ -140,6 +144,11 @@ public class Helper
     {
         Globals.Client_Text1.Clear();
         Globals.Client_Text2.Clear();
+        Globals.TextIncude.Clear();
+        Globals.TextExclude.Clear();
+        Globals.DiscordIncude.Clear();
+        Globals.DiscordExclude.Clear();
+        Globals.TeamChat.Clear();
     }
 
     public static async Task SendToDiscordWebhookNormal(string webhookUrl, string message)

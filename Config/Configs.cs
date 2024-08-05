@@ -82,6 +82,7 @@ namespace Chat_Logger_GoldKingZ.Config
 
         public class ConfigData
         {
+            public string empty { get; set; }
             public bool Text_EnableLoggingMessages { get; set; }
             public bool Text_PrivateTeamMessagesOnly { get; set; }
             public string Text_IncludeFlagsMessagesOnly { get; set; }
@@ -93,7 +94,7 @@ namespace Chat_Logger_GoldKingZ.Config
             public string Text_DateFormat { get; set; }
             public string Text_TimeFormat { get; set; }
             public int Text_AutoDeleteLogsMoreThanXdaysOld { get; set; }
-            public string empty { get; set; }
+            public string empty1 { get; set; }
             private int _Discord_EnableLoggingMessagesOnMode;
             public int Discord_EnableLoggingMessagesOnMode
             {
@@ -146,6 +147,7 @@ namespace Chat_Logger_GoldKingZ.Config
             
             public ConfigData()
             {
+                empty = "---------------------------------vvv [ Text Local Save In (Chat-Logger-GoldKingZ/logs/)  ] vvv---------------------------------";
                 Text_EnableLoggingMessages = false;
                 Text_PrivateTeamMessagesOnly = false;
                 Text_IncludeFlagsMessagesOnly = "";
@@ -157,7 +159,7 @@ namespace Chat_Logger_GoldKingZ.Config
                 Text_DateFormat = "MM-dd-yyyy";
                 Text_TimeFormat = "HH:mm:ss";
                 Text_AutoDeleteLogsMoreThanXdaysOld = 0;
-                empty = "-----------------------------------------------------------------------------------";
+                empty1 = "------------------------------------------------------vvv [ Discord ] vvv------------------------------------------------------";
                 Discord_EnableLoggingMessagesOnMode = 0;
                 Discord_PrivateTeamMessagesOnly = false;
                 Discord_IncludeFlagsMessagesOnly = "";
@@ -170,7 +172,7 @@ namespace Chat_Logger_GoldKingZ.Config
                 Discord_TimeFormat = "HH:mm:ss";
                 Discord_SideColor = "00FFFF";
                 Discord_WebHookURL = "https://discord.com/api/webhooks/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-                Discord_UsersWithNoAvatarImage = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/b5/b5bd56c1aa4644a474a2e4972be27ef9e82e517e_full.jpg";
+                Discord_UsersWithNoAvatarImage = "https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/blob/main/Resources/avatar.jpg?raw=true";
                 Discord_FooterImage = "https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/blob/main/Resources/serverip.png?raw=true";
                 empty2 = "-----------------------------------------------------------------------------------";
                 Information_For_You_Dont_Delete_it = " Vist  [https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/tree/main?tab=readme-ov-file#-configuration-] To Understand All Above";
