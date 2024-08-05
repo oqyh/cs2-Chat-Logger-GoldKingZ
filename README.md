@@ -3,7 +3,7 @@
 <a href="https://discord.com/invite/U7AuQhu"><img src="https://discord.com/api/guilds/651838917687115806/widget.png?style=banner2"></a>
 
 ***
-# [CS2] Chat-Logger-GoldKingZ (1.0.7)
+# [CS2] Chat-Logger-GoldKingZ (1.0.8)
 
 ### Log InGame Chat And Send It To Log Text Or Discord WebHook
 
@@ -31,6 +31,7 @@
 
 ```json
 {
+  //---------------------------------vvv [ Text Local Save In (Chat-Logger-GoldKingZ/logs/)  ] vvv---------------------------------
   //Enable Logging Text Located In Chat-Logger-GoldKingZ/logs/ ?
   "Text_EnableLoggingMessages": false,
 
@@ -72,7 +73,7 @@
   //Auto Delete Logs If More Than X (Days) Old
   "Text_AutoDeleteLogsMoreThanXdaysOld": 0,
 
-//-----------------------------------------------------------------------------------------
+//------------------------------------------------------vvv [ Discord ] vvv------------------------------------------------------
 
   //Send Log To Discord Via WebHookURL
   // (0) = Disable
@@ -125,6 +126,13 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.8)
+-Fix Some Bugs
+-Fixed Text_IncludeFlagsMessagesOnly
+-Fixed Text_ExcludeFlagsMessages
+-Fixed Discord_IncludeFlagsMessagesOnly
+-Fixed Discord_ExcludeFlagsMessages
+
 (1.0.7)
 -Upgrade Net.7 To Net.8
 -Fix Some Bugs
