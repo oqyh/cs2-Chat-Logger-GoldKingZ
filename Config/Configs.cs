@@ -148,7 +148,7 @@ namespace Chat_Logger_GoldKingZ.Config
             public ConfigData()
             {
                 empty = "---------------------------------vvv [ Text Local Save In (Chat-Logger-GoldKingZ/logs/)  ] vvv---------------------------------";
-                Text_EnableLoggingMessages = false;
+                Text_EnableLoggingMessages = true;
                 Text_PrivateTeamMessagesOnly = false;
                 Text_IncludeFlagsMessagesOnly = "";
                 Text_ExcludeFlagsMessages = "@css/exclude,#css/exclude";
