@@ -3,7 +3,7 @@
 <a href="https://discord.com/invite/U7AuQhu"><img src="https://discord.com/api/guilds/651838917687115806/widget.png?style=banner2"></a>
 
 ***
-# [CS2] Chat-Logger-GoldKingZ (1.0.8)
+# [CS2] Chat-Logger-GoldKingZ (1.0.9)
 
 ### Log InGame Chat And Send It To Log Text Or Discord WebHook
 
@@ -33,7 +33,7 @@
 {
   //---------------------------------vvv [ Text Local Save In (Chat-Logger-GoldKingZ/logs/)  ] vvv---------------------------------
   //Enable Logging Text Located In Chat-Logger-GoldKingZ/logs/ ?
-  "Text_EnableLoggingMessages": false,
+  "Text_EnableLoggingMessages": true,
 
   //Log Only Team Chat Messages?
   "Text_PrivateTeamMessagesOnly": false,
@@ -126,6 +126,11 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.0.9)
+-Fix Some Bugs
+-Fixed Text_ExcludeMessageContains
+-Fixed Discord_ExcludeMessageContains
+
 (1.0.8)
 -Fix Some Bugs
 -Fixed Text_IncludeFlagsMessagesOnly
