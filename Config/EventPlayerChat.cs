@@ -48,8 +48,8 @@ public class PlayerChat
         var ipAddress = GetIpAddress?.Split(':')[0] ?? "InValidIpAddress";
         
 
-        if (string.IsNullOrWhiteSpace(eventmessage.ToString())) return HookResult.Continue;
-        string trimmedMessageStart = eventmessage.ToString().TrimStart();
+        if (string.IsNullOrWhiteSpace(eventmessage)) return HookResult.Continue;
+        string trimmedMessageStart = eventmessage.TrimStart();
         string message = trimmedMessageStart.TrimEnd();
 
         if (!Globals.Client_Text1.ContainsKey(playerid))
@@ -76,7 +76,7 @@ public class PlayerChat
             string chatteam = Globals.TeamChat[playerid] ? "[TEAM]" : "[ALL]";
             if (Globals.TextExclude.ContainsKey(playerid))return HookResult.Continue;
             if (Globals.TextIncude.ContainsKey(playerid))return HookResult.Continue;
-            if(!string.IsNullOrEmpty(Configs.GetConfigData().Text_ExcludeMessageContains) && Helper.IsStringValid(message)) return HookResult.Continue;
+            if(!string.IsNullOrEmpty(Configs.GetConfigData().Text_ExcludeMessageContains) && Helper.Text_IsStringValid(message)) return HookResult.Continue;
             if (Configs.GetConfigData().Text_ExcludeMessageContainsLessThanXLetters > 0 && Helper.CountLetters(message) <= Configs.GetConfigData().Text_ExcludeMessageContainsLessThanXLetters) return HookResult.Continue;
             if(Configs.GetConfigData().Text_ExcludeMessageDuplicate && Globals.Client_Text2[playerid] == Globals.Client_Text1[playerid]) return HookResult.Continue;
             string Time = DateTime.Now.ToString(Configs.GetConfigData().Text_TimeFormat);
@@ -124,7 +124,7 @@ public class PlayerChat
             string chatteam = Globals.TeamChat[playerid] ? "[TEAM]" : "[ALL]";
             if (Globals.DiscordExclude.ContainsKey(playerid))return HookResult.Continue;
             if (Globals.DiscordIncude.ContainsKey(playerid))return HookResult.Continue;
-            if(!string.IsNullOrEmpty(Configs.GetConfigData().Discord_ExcludeMessageContains) && Helper.IsStringValid(message)) return HookResult.Continue;
+            if(!string.IsNullOrEmpty(Configs.GetConfigData().Discord_ExcludeMessageContains) && Helper.Discord_IsStringValid(message)) return HookResult.Continue;
             if (Configs.GetConfigData().Discord_ExcludeMessageContainsLessThanXLetters > 0 && Helper.CountLetters(message) <= Configs.GetConfigData().Discord_ExcludeMessageContainsLessThanXLetters) return HookResult.Continue;
             if(Configs.GetConfigData().Discord_ExcludeMessageDuplicate && Globals.Client_Text2[playerid] == Globals.Client_Text1[playerid]) return HookResult.Continue;
 

@@ -7,7 +7,7 @@ namespace Chat_Logger_GoldKingZ;
 public class ChatLoggerGoldKingZ : BasePlugin
 {
     public override string ModuleName => "Chat Logger (Log Chat To Text Or Discord WebHook)";
-    public override string ModuleVersion => "1.0.9";
+    public override string ModuleVersion => "1.1.0";
     public override string ModuleAuthor => "Gold KingZ";
     public override string ModuleDescription => "https://github.com/oqyh";
     private readonly PlayerChat _PlayerChat = new();
