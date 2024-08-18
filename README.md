@@ -3,7 +3,7 @@
 <a href="https://discord.com/invite/U7AuQhu"><img src="https://discord.com/api/guilds/651838917687115806/widget.png?style=banner2"></a>
 
 ***
-# [CS2] Chat-Logger-GoldKingZ (1.0.9)
+# [CS2] Chat-Logger-GoldKingZ (1.1.0)
 
 ### Log InGame Chat And Send It To Log Text Or Discord WebHook
 
@@ -126,6 +126,10 @@
 
 ## .:[ Change Log ]:.
 ```
+(1.1.0)
+-Fix Some Bugs
+-Fixed Bind Not Logging
+
 (1.0.9)
 -Fix Some Bugs
 -Fixed Text_ExcludeMessageContains
