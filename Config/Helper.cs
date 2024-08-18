@@ -76,17 +76,9 @@ public class Helper
         }
         return false;
     }
-    public static bool Text_IsStringValid(string input)
+    public static bool IsStringValid(string input)
     {
         if (!string.IsNullOrEmpty(input) && !input.Contains(" ") && input.Any(c => Configs.GetConfigData().Text_ExcludeMessageContains.Contains(c)) && !char.IsWhiteSpace(input.Last()))
-        {
-            return true;
-        }
-        return false;
-    }
-    public static bool Discord_IsStringValid(string input)
-    {
-        if (!string.IsNullOrEmpty(input) && !input.Contains(" ") && input.Any(c => Configs.GetConfigData().Discord_ExcludeMessageContains.Contains(c)) && !char.IsWhiteSpace(input.Last()))
         {
             return true;
         }
