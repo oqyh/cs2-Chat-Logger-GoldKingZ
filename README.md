@@ -2,10 +2,11 @@
 
 <a href="https://discord.com/invite/U7AuQhu"><img src="https://discord.com/api/guilds/651838917687115806/widget.png?style=banner2"></a>
 
-***
-# [CS2] Chat-Logger-GoldKingZ (1.1.0)
+# [CS2] Chat-Logger-GoldKingZ (1.1.1)
 
-### Log InGame Chat And Send It To Log Text Or Discord WebHook
+Log Chat To Locally/Discord WebHook/MySql
+
+![webchatlogger](https://github.com/user-attachments/assets/14247d1a-b3c2-4140-a7c3-445c9ac70dc7)
 
 ![ingame](https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/assets/48490385/c9f6012b-06f2-4bd5-a215-2f49128d1cba)
 
@@ -15,183 +16,218 @@
 
 ![Mode5](https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/assets/48490385/7811046a-2b76-4758-8298-f701b45c28a7)
 
+---
 
-## .:[ Dependencies ]:.
-[Metamod:Source (2.x)](https://www.sourcemm.net/downloads.php/?branch=master)
+## 📦 Dependencies
+[![Metamod:Source](https://img.shields.io/badge/Metamod:Source-2d2d2d?logo=sourceengine)](https://www.sourcemm.net)
 
-[CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/releases)
+[![CounterStrikeSharp](https://img.shields.io/badge/CounterStrikeSharp-83358F)](https://github.com/roflmuffin/CounterStrikeSharp)
 
-[Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json)
+[![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)](https://dev.mysql.com/doc/connector-net/en/) [Included in zip]
 
-## .:[ Configuration ]:.
+[![JSON](https://img.shields.io/badge/JSON-000000?logo=json)](https://www.newtonsoft.com/json) [Included in zip]
 
-> [!CAUTION]
-> Config Located In ..\addons\counterstrikesharp\plugins\Chat-Logger-GoldKingZ\config\config.json                                           
+---
+
+## 📥 Installation
+
+### Plugin Installation
+1. Download the latest `Chat-Logger-GoldKingZ.x.x.x.zip` release
+2. Extract contents to your `csgo` directory
+3. Configure settings in `Chat-Logger-GoldKingZ/config/config.json`
+4. Restart your server
+
+### Web Interface Setup
+1. Download the latest `webserver.x.x.x.zip` release
+2. Extract to your web server directory
+3. Configure MySQL connections in `database.php`
+
+---
+
+## ⚙️ Configuration
+
+> [!NOTE]
+> Located In ..\Chat-Logger-GoldKingZ\config\config.json                                           
 >
 
-```json
-{
-  //---------------------------------vvv [ Text Local Save In (Chat-Logger-GoldKingZ/logs/)  ] vvv---------------------------------
-  //Enable Logging Text Located In Chat-Logger-GoldKingZ/logs/ ?
-  "Text_EnableLoggingMessages": true,
+<details open>
+<summary><b>Locally Config</b> (Click to expand 🔽)</summary>
 
-  //Log Only Team Chat Messages?
-  "Text_PrivateTeamMessagesOnly": false,
+| Property | Description | Values | Required |  
+|----------|-------------|--------|----------|  
+| `Locally_Enable` | Save Chat Messages Locally | `0`-Disable<br>`1`-Log when player chats<br>`2`-Log and send at round end<br>`3`-Log and send at map end | - |  
+| `Locally_LogMessagesOnly` | Log Messages Only | `1`-Both public and team chat<br>`2`-Public chat only<br>`3`-Team chat only | `Locally_Enable=1/2/3` |  
+| `Locally_IncludeTheseFlagsMessagesOnly` | Log These Flags Only | Example: `!76561198206086993,@css/include`<br>`""` = Everyone | `Locally_Enable=1/2/3` |  
+| `Locally_ExcludeFlagsMessages` | Don't Log These Flags | Example: `@css/exclude,#css/exclude`<br>`""` = Exclude none | `Locally_Enable=1/2/3` |  
+| `Locally_ExcludeMessagesStartWith` | Exclude Messages Starting With | Example: `!./`<br>`""` = Disable | `Locally_Enable=1/2/3` |  
+| `Locally_ExcludeMessagesContainsLessThanXLetters` | Exclude Short Messages | Minimum letters<br>`0` = Disable | `Locally_Enable=1/2/3` |  
+| `Locally_ExcludeMessagesDuplicate` | Exclude Duplicate Messages | `true`/`false` | `Locally_Enable=1/2/3` |  
+| `Locally_MessageFormat` | Message Format | Template with placeholders<br>`""` = Disable | `Locally_Enable=1/2/3` |  
+| `Locally_DateFormat` | Date Format | Examples: `MM-dd-yyyy` | `Locally_Enable=1/2/3` |  
+| `Locally_TimeFormat` | Time Format | Examples: `HH:mm:ss` | `Locally_Enable=1/2/3` |  
+| `Locally_AutoDeleteLogsMoreThanXdaysOld` | Auto Delete Old Logs | Days to keep<br>`0` = Disable | `Locally_Enable=1/2/3` |  
 
-  //Include These Group From Logging Only "" Means Everyone
-  "Text_IncludeFlagsMessagesOnly": "",
+</details>
 
-  //Exclude These Group From Logging Only "" Means Everyone
-  "Text_ExcludeFlagsMessages": "@css/exclude,#css/exclude",
+<details>
+<summary><b>Discord Config</b> (Click to expand 🔽)</summary>
 
-  //Exclude Message if begin "!" or "." or "/"
-  "Text_ExcludeMessageContains": "!./",
+| Property | Description | Values | Required |  
+|----------|-------------|--------|----------|  
+| `Discord_WebHook` | Discord WebHook URL | Example: `https://discord.com/api/webhooks/...`<br>`""` = Disable | - |  
+| `Discord_Style` | Message Appearance Style | `0`-Disable<br>`1`-Text only<br>`2`-Text+Name+Link<br>`3`-+Profile Picture<br>`4`-+Separate Date/Time<br>`5`-+Server IP footer | `Discord_WebHook` |  
+| `Discord_SideColor` | Message Side Color | Hex color code (e.g. `00FFFF`) | `Discord_Style=2/3/4/5` |  
+| `Discord_FooterImage` | Footer Image URL | Image URL | `Discord_Style=3/4/5` |  
+| `Discord_UsersWithNoAvatarImage` | Default Avatar Image | Image URL | `Discord_Style=5` |  
+| `Discord_LogMessagesOnly` | Log Messages Only | `1`-Both chats<br>`2`-Public only<br>`3`-Team only | `Discord_WebHook` |  
+| `Discord_IncludeTheseFlagsMessagesOnly` | Log These Flags Only | Example: `!76561198206086993`<br>`""` = Everyone | `Discord_WebHook` |  
+| `Discord_ExcludeFlagsMessages` | Exclude These Flags | Example: `@css/exclude`<br>`""` = Exclude none | `Discord_WebHook` |  
+| `Discord_ExcludeMessagesStartWith` | Exclude Messages Starting With | Example: `!./`<br>`""` = Disable | `Discord_WebHook` |  
+| `Discord_ExcludeMessagesContainsLessThanXLetters` | Exclude Short Messages | Minimum letters<br>`0` = Disable | `Discord_WebHook` |  
+| `Discord_ExcludeMessagesDuplicate` | Exclude Duplicates | `true`/`false` | `Discord_WebHook` |  
+| `Discord_MessageFormat` | Message Format | Template with placeholders | `Discord_WebHook` |  
+| `Discord_DateFormat` | Date Format | Examples: `MM-dd-yyyy` | `Discord_WebHook` |  
+| `Discord_TimeFormat` | Time Format | Examples: `HH:mm:ss` | `Discord_WebHook` |  
 
-  //Exclude Message If Contains Less Than X Letters
-  "Text_ExcludeMessageContainsLessThanXLetters": 0,
+</details>
 
-  //Exclude Dublicated Messages
-  "Text_ExcludeMessageDuplicate": false,
+<details>
+<summary><b>MySQL Config</b> (Click to expand 🔽)</summary>
 
-  //Log Message Format
-  //{TIME} == Time
-  //{DATE} == Date
-  //{MESSAGE} == Player Message
-  //{PLAYERNAME} == Player Name Who Type In Chat
-  //{TEAM} == Check If Player Wrote In Chat Team Or Public Chat [TEAM] [ALL]
-  //{STEAMID} = STEAM_0:1:122910632
-  //{STEAMID3} = U:1:245821265
-  //{STEAMID32} = 245821265
-  //{STEAMID64} = 76561198206086993
-  //{IP} = 127.0.0.0
-  "Text_MessageFormat": "[{TIME}] [{STEAMID}] {TEAM} ({PLAYERNAME}) {MESSAGE}",
+| Property | Description | Values | Required |  
+|----------|-------------|--------|----------|  
+| `MySql_Enable` | Save to MySQL | `0`-Disable<br>`1`-Log immediately<br>`2`-Log at round end<br>`3`-Log at map end | - |  
+| `MySql_Host` | MySQL Host | Example: `123.45.67.89` | `MySql_Enable=1/2/3` |  
+| `MySql_Database` | Database Name | Example: `Chat_Logs` | `MySql_Enable=1/2/3` |  
+| `MySql_Username` | Database Username | Example: `root` | `MySql_Enable=1/2/3` |  
+| `MySql_Password` | Database Password | Example: `Password123123` | `MySql_Enable=1/2/3` |  
+| `MySql_Port` | Database Port | Default: `3306` | `MySql_Enable=1/2/3` |  
+| `MySql_LogMessagesOnly` | Log Messages Only | `1`-Both chats<br>`2`-Public only<br>`3`-Team only | `MySql_Enable=1/2/3` |  
+| `MySql_IncludeTheseFlagsMessagesOnly` | Log These Flags Only | Example: `!76561198206086993`<br>`""` = Everyone | `MySql_Enable=1/2/3` |  
+| `MySql_ExcludeFlagsMessages` | Exclude These Flags | Example: `@css/exclude`<br>`""` = Exclude none | `MySql_Enable=1/2/3` |  
+| `MySql_ExcludeMessagesStartWith` | Exclude Messages Starting With | Example: `!./`<br>`""` = Disable | `MySql_Enable=1/2/3` |  
+| `MySql_ExcludeMessagesContainsLessThanXLetters` | Exclude Short Messages | Minimum letters<br>`0` = Disable | `MySql_Enable=1/2/3` |  
+| `MySql_ExcludeMessagesDuplicate` | Exclude Duplicates | `true`/`false` | `MySql_Enable=1/2/3` |  
+| `MySql_AutoDeleteLogsMoreThanXdaysOld` | Auto Delete Old Logs | Days to keep<br>`0` = Disable | `MySql_Enable=1/2/3` |  
 
-  //Date and Time Formate
-  "Text_DateFormat": "MM-dd-yyyy",
-  "Text_TimeFormat": "HH:mm:ss",
+</details>
 
-  //Auto Delete Logs If More Than X (Days) Old
-  "Text_AutoDeleteLogsMoreThanXdaysOld": 0,
+<details>
+<summary><b>Utilities Config</b> (Click to expand 🔽)</summary>
 
-//------------------------------------------------------vvv [ Discord ] vvv------------------------------------------------------
+| Property | Description | Values | Required |  
+|----------|-------------|--------|----------|  
+| `EnableDebug` | Enable Debug Mode | `true`-Yes<br>`false`-No | - |  
 
-  //Send Log To Discord Via WebHookURL
-  // (0) = Disable
-  // (1) = Text Only (Result Image : https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/blob/main/Resources/Mode1.png?raw=true)
-  // (2) = Text With + Name + Hyperlink To Steam Profile (Result Image : https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/blob/main/Resources/Mode2.png?raw=true)
-  // (3) = Text With + Name + Hyperlink To Steam Profile + Profile Picture (Result Image : https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/blob/main/Resources/Mode3.png?raw=true)
-  // (4) = Text With + Name + Hyperlink To Steam Profile + Profile Picture + Saparate Date And Time From Message (Result Image : https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/blob/main/Resources/Mode4.png?raw=true)
-  // (5) = Text With + Name + Hyperlink To Steam Profile + Profile Picture + Saparate Date And Time From Message + Server Ip In Footer (Result Image : https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/blob/main/Resources/Mode5.png?raw=true)
-  "Discord_EnableLoggingMessagesOnMode": 0,
+</details>
 
-  //Send Only Team Chat Messages?
-  "Discord_PrivateTeamMessagesOnly": false,
+---
 
-  //Include These Group From Logging Only "" Means Everyone
-  "Discord_IncludeFlagsMessagesOnly": "",
+## 📜 Changelog
 
-  //Exclude These Group From Logging Only "" Means Everyone
-  "Discord_ExcludeFlagsMessages": "@css/exclude,#css/exclude",
+<details>
+<summary><b>📋 View Version History</b> (Click to expand 🔽)</summary>
 
-  //Exclude Message if begin "!" or "." or "/"
-  "Discord_ExcludeMessageContains": "!./",
+### [1.1.1]
+#### **General Changes**  
+- Reworked plugin for better stability  
+- Fixed Plugin Only Works With css_plugins reload
+- Added config descriptions in `config.json`  
+- New `EnableDebug` option  
 
-  //Exclude Message If Contains Less Than X Letters
-  "Discord_ExcludeMessageContainsLessThanXLetters": 0,
+#### **Local Logging (Locally_)**  
+- Added `Locally_Enable` (logs at round/map end)  
+- `Locally_LogMessagesOnly` filters by chat type (Team/Public/Both)  
+- Supports SteamID formats (`!STEAM_0:1:122910632`, `!U:1:245821265`, `!245821265`, `!76561198206086993`)
+- Fixed `Locally_MessageFormat`  
 
-  //Exclude Dublicated Messages
-  "Discord_ExcludeMessageDuplicate": false,
+#### **Discord Logging (Discord_)**  
+- Removed `Discord_EnableLoggingMessagesOnMode`  
+- Fixed `Discord_Style` formatting  
+- Added `Discord_LogMessagesOnly` (Team/Public/Both)  
+- Supports SteamID formats (`!STEAM_0:1:122910632`, `!U:1:245821265`, `!245821265`, `!76561198206086993`)  
 
-  //Discord Message Format
-  "Discord_MessageFormat": "[{TIME}] [{STEAMID}] {TEAM} ({PLAYERNAME}) {MESSAGE}",
+#### **MySQL Logging (New Feature)**  
+- Added MySql_Enable
+- Added MySql_Host
+- Added MySql_Database
+- Added MySql_Username
+- Added MySql_Password
+- Added MySql_Port
+- Added MySql_LogMessagesOnly
+- Added MySql_IncludeTheseFlagsMessagesOnly
+- Added MySql_ExcludeFlagsMessages
+- Added MySql_ExcludeMessagesStartWith
+- Added MySql_ExcludeMessagesContainsLessThanXLetters
+- Added MySql_ExcludeMessagesDuplicate
+- Added MySql_AutoDeleteLogsMoreThanXdaysOld
 
-  //Date and Time Formate
-  "Discord_DateFormat": "MM-dd-yyyy",
-  "Discord_TimeFormat": "HH:mm:ss",
+#### **Web Interface (New Feature)**  
+- Added web-based log viewer  
 
-  //If Discord_EnableLoggingMessagesOnMode (2) or (3) or  (4) or (5) How Would You Side Color Message To Be Check (https://www.color-hex.com/) For Colors
-  "Discord_SideColor": "00FFFF",
+### [1.1.0]
+- Fixed some bugs
+- Fixed bind not logging
 
-  //Discord WebHookURL
-  "Discord_WebHookURL": "https://discord.com/api/webhooks/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+### [1.0.9]
+- Fixed some bugs
+- Fixed Text_ExcludeMessageContains
+- Fixed Discord_ExcludeMessageContains
 
-  ////If Discord_EnableLoggingMessagesOnMode (3) or  (4) or (5) And Player Doesn't Have Profile Picture Which Picture Do You Like To Be Replaced
-  "Discord_UsersWithNoAvatarImage": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/b5/b5bd56c1aa4644a474a2e4972be27ef9e82e517e_full.jpg",
+### [1.0.8]
+- Fixed some bugs
+- Fixed Text_IncludeFlagsMessagesOnly
+- Fixed Text_ExcludeFlagsMessages
+- Fixed Discord_IncludeFlagsMessagesOnly
+- Fixed Discord_ExcludeFlagsMessages
 
-  //If Discord_EnableLoggingMessagesOnMode (5) Image Url Footer
-  "Discord_FooterImage": "https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/blob/main/Resources/serverip.png?raw=true",
+### [1.0.7]
+- Upgraded from .NET 7 to .NET 8
+- Fixed some bugs
+- Reworked chat logger
+- Added modes 4 and 5 to SendLogToWebHook
+- Added Discord_FooterImage
+- Separated Discord log from text log
 
-}
-```
+### [1.0.6]
+- Fixed some bugs
+- Fixed AutoDeleteLogsMoreThanXdaysOld
+- Fixed SendLogToWebHook (3) for no avatar users
+- Added IncludeMessageGroups
+- Added UsersWithNoAvatarImage
 
-## .:[ Change Log ]:.
-```
-(1.1.0)
--Fix Some Bugs
--Fixed Bind Not Logging
+### [1.0.5]
+- Fixed some bugs
+- Removed "SteamApi"
 
-(1.0.9)
--Fix Some Bugs
--Fixed Text_ExcludeMessageContains
--Fixed Discord_ExcludeMessageContains
+### [1.0.4]
+- Added "ExcludeMessageGroups"
+- Added "ExcludeMessageContainsLessThanXLetters"
+- Added "ExcludeMessageDuplicate"
+- Added "AutoDeleteLogsMoreThanXdaysOld"
+- Added "SendLogToWebHook" modes 1/2/3
+- Added "SideColorMessage"
+- Added "SteamApi"
+- Fixed some bugs
 
-(1.0.8)
--Fix Some Bugs
--Fixed Text_IncludeFlagsMessagesOnly
--Fixed Text_ExcludeFlagsMessages
--Fixed Discord_IncludeFlagsMessagesOnly
--Fixed Discord_ExcludeFlagsMessages
+### [1.0.3]
+- Added "ExcludeMessage"
+- Added "ExcludeMessageContains"
+- Fixed "LogChatFormat" and "LogDiscordChatFormat" not logging when other plugins touch "say" and "say_team"
 
-(1.0.7)
--Upgrade Net.7 To Net.8
--Fix Some Bugs
--Rework Chat Logger
--Added Modes To SendLogToWebHook 4 and 5
--Added Discord_FooterImage
--Saparate Discord Log From Text Log 
+### [1.0.2]
+- Fixed "LogDiscordChatFormat"
 
-(1.0.6)
--Fix Some Bugs
--Fix AutoDeleteLogsMoreThanXdaysOld
--Fix SendLogToWebHook (3) For No Avatar Users
--Added IncludeMessageGroups
--Added UsersWithNoAvatarImage
+### [1.0.1]
+- Added {STEAMID3} and {STEAMID32} to:
+  - "LogChatFormat"
+  - "LogInsideFileTimeFormat"
+- Fixed some bugs
+- Improved Discord message styling with Steam links
 
-(1.0.5)
--Fix Some Bugs
--Remove "SteamApi"
+### [1.0.0]
+- Initial Release
 
-(1.0.4)
--Added "ExcludeMessageGroups" 
--Added "ExcludeMessageContainsLessThanXLetters"
--Added "ExcludeMessageDuplicate"
--Added "AutoDeleteLogsMoreThanXdaysOld"
--Added "SendLogToWebHook" Mode 1/2/3
--Added "SideColorMessage"
--Added "SteamApi"
--Fix Some Bugs
+</details>
 
-(1.0.3)
--Added "ExcludeMessage" 
--Added "ExcludeMessageContains"
--Fix "LogChatFormat" and "LogDiscordChatFormat" not log if other plugin touch "say" and "say_team" 
-
-(1.0.2)
--Fix "LogDiscordChatFormat"
-
-(1.0.1)
--Added {STEAMID3} {STEAMID32} To
-"LogChatFormat"
-"LogInsideFileTimeFormat"
--Fix Some Bugs
--Fix Discord message now better style with link to steam
-
-(1.0.0)
--Initial Release
-```
-
-## .:[ Donation ]:.
-
-If this project help you reduce time to develop, you can give me a cup of coffee :)
-
-[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/oQYh)
+---
