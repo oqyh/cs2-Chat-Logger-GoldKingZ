@@ -14,9 +14,12 @@
   <ItemGroup>
     <PackageReference Include="CounterStrikeSharp.API" Version="*" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="MySqlConnector" Version="2.3.7" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="Newtonsoft.Json.dll"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
+    <None Update="MySqlConnector.dll"><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></None>
   </ItemGroup>
+
 </Project>
