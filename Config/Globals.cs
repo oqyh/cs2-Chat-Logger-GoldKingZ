@@ -3,21 +3,6 @@ using CounterStrikeSharp.API.Core;
 
 namespace Chat_Logger_GoldKingZ;
 
-
-public static class Globals_Static
-{
-    public class PersonData
-    {
-        public ulong PlayerSteamID { get; set; }
-        public string? Player_Name { get; set; }
-        public string? Player_Message { get; set; }
-        public int Toggle_Wall_Logo { get; set; }
-        public int Toggle_Wall_Text { get; set; }
-        public int Toggle_Player_Logo { get; set; }
-        public DateTime DateAndTime { get; set; }
-    }
-}
-
 public class Globals
 {
     public string ServerPublicIpAdress = "";
