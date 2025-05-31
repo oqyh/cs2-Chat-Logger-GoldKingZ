@@ -128,8 +128,7 @@ Log Chat To Locally/Discord WebHook/MySql/Web Server
 <details>
 <summary><b>📋 View Version History</b> (Click to expand 🔽)</summary>
 
-### [1.1.2]
-#### **Plugin**  
+#### **Plugin** [1.1.2]
 - Some Clean Up
 - Fix Some Bugs
 - Fix CounterStrikeSharp Excluding Root By Default
@@ -140,7 +139,7 @@ Log Chat To Locally/Discord WebHook/MySql/Web Server
 - Fix Mysql Table
 - Added Server IP Into Log Mysql
 
-#### **Web Interface**  
+#### **Web Interface** [1.0.1] 
 - Added Multiple Servers
 
 ### [1.1.1]
