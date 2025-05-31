@@ -2,9 +2,9 @@
 
 <a href="https://discord.com/invite/U7AuQhu"><img src="https://discord.com/api/guilds/651838917687115806/widget.png?style=banner2"></a>
 
-# [CS2] Chat-Logger-GoldKingZ (1.1.1)
+# [CS2] Chat-Logger-GoldKingZ (1.1.2)
 
-Log Chat To Locally/Discord WebHook/MySql
+Log Chat To Locally/Discord WebHook/MySql/Web Server
 
 ![webchatlogger](https://github.com/user-attachments/assets/14247d1a-b3c2-4140-a7c3-445c9ac70dc7)
 
@@ -57,8 +57,8 @@ Log Chat To Locally/Discord WebHook/MySql
 |----------|-------------|--------|----------|  
 | `Locally_Enable` | Save Chat Messages Locally | `0`-Disable<br>`1`-Log when player chats<br>`2`-Log and send at round end<br>`3`-Log and send at map end | - |  
 | `Locally_LogMessagesOnly` | Log Messages Only | `1`-Both public and team chat<br>`2`-Public chat only<br>`3`-Team chat only | `Locally_Enable=1/2/3` |  
-| `Locally_IncludeTheseFlagsMessagesOnly` | Log These Flags Only | Example: `!76561198206086993,@css/include`<br>`""` = Everyone | `Locally_Enable=1/2/3` |  
-| `Locally_ExcludeFlagsMessages` | Don't Log These Flags | Example: `@css/exclude,#css/exclude`<br>`""` = Exclude none | `Locally_Enable=1/2/3` |  
+| `Locally_IncludeTheseFlagsMessagesOnly` | Log These Flags Only | Example: `Flags : @css/admins,@css/admin`<br>`""` = Everyone | `Locally_Enable=1/2/3` |  
+| `Locally_ExcludeFlagsMessages` | Don't Log These Flags | Example: `Groups : #css/exclude` <br>`""` = Exclude none | `Locally_Enable=1/2/3` |  
 | `Locally_ExcludeMessagesStartWith` | Exclude Messages Starting With | Example: `!./`<br>`""` = Disable | `Locally_Enable=1/2/3` |  
 | `Locally_ExcludeMessagesContainsLessThanXLetters` | Exclude Short Messages | Minimum letters<br>`0` = Disable | `Locally_Enable=1/2/3` |  
 | `Locally_ExcludeMessagesDuplicate` | Exclude Duplicate Messages | `true`/`false` | `Locally_Enable=1/2/3` |  
@@ -80,8 +80,8 @@ Log Chat To Locally/Discord WebHook/MySql
 | `Discord_FooterImage` | Footer Image URL | Image URL | `Discord_Style=3/4/5` |  
 | `Discord_UsersWithNoAvatarImage` | Default Avatar Image | Image URL | `Discord_Style=5` |  
 | `Discord_LogMessagesOnly` | Log Messages Only | `1`-Both chats<br>`2`-Public only<br>`3`-Team only | `Discord_WebHook` |  
-| `Discord_IncludeTheseFlagsMessagesOnly` | Log These Flags Only | Example: `!76561198206086993`<br>`""` = Everyone | `Discord_WebHook` |  
-| `Discord_ExcludeFlagsMessages` | Exclude These Flags | Example: `@css/exclude`<br>`""` = Exclude none | `Discord_WebHook` |  
+| `Discord_IncludeTheseFlagsMessagesOnly` | Log These Flags Only | Example: `SteamIDs : 76561198206086993,76561198974936845`<br>`""` = Everyone | `Discord_WebHook` |  
+| `Discord_ExcludeFlagsMessages` | Don't Log These Flags | Example: `Flags : @css/exclude`<br>`""` = Exclude none | `Discord_WebHook` |    
 | `Discord_ExcludeMessagesStartWith` | Exclude Messages Starting With | Example: `!./`<br>`""` = Disable | `Discord_WebHook` |  
 | `Discord_ExcludeMessagesContainsLessThanXLetters` | Exclude Short Messages | Minimum letters<br>`0` = Disable | `Discord_WebHook` |  
 | `Discord_ExcludeMessagesDuplicate` | Exclude Duplicates | `true`/`false` | `Discord_WebHook` |  
@@ -103,8 +103,8 @@ Log Chat To Locally/Discord WebHook/MySql
 | `MySql_Password` | Database Password | Example: `Password123123` | `MySql_Enable=1/2/3` |  
 | `MySql_Port` | Database Port | Default: `3306` | `MySql_Enable=1/2/3` |  
 | `MySql_LogMessagesOnly` | Log Messages Only | `1`-Both chats<br>`2`-Public only<br>`3`-Team only | `MySql_Enable=1/2/3` |  
-| `MySql_IncludeTheseFlagsMessagesOnly` | Log These Flags Only | Example: `!76561198206086993`<br>`""` = Everyone | `MySql_Enable=1/2/3` |  
-| `MySql_ExcludeFlagsMessages` | Exclude These Flags | Example: `@css/exclude`<br>`""` = Exclude none | `MySql_Enable=1/2/3` |  
+| `MySql_IncludeTheseFlagsMessagesOnly` | Log These Flags Only | Example: `Flags : @css/admins,@css/admin`<br>`""` = Everyone | `MySql_Enable=1/2/3` |  
+| `MySql_ExcludeFlagsMessages` | Don't Log These Flags | Example: `Groups : #css/exclude`<br>`""` = Exclude none | `MySql_Enable=1/2/3` |      
 | `MySql_ExcludeMessagesStartWith` | Exclude Messages Starting With | Example: `!./`<br>`""` = Disable | `MySql_Enable=1/2/3` |  
 | `MySql_ExcludeMessagesContainsLessThanXLetters` | Exclude Short Messages | Minimum letters<br>`0` = Disable | `MySql_Enable=1/2/3` |  
 | `MySql_ExcludeMessagesDuplicate` | Exclude Duplicates | `true`/`false` | `MySql_Enable=1/2/3` |  
@@ -127,6 +127,21 @@ Log Chat To Locally/Discord WebHook/MySql
 
 <details>
 <summary><b>📋 View Version History</b> (Click to expand 🔽)</summary>
+
+### [1.1.2]
+#### **Plugin**  
+- Some Clean Up
+- Fix Some Bugs
+- Fix CounterStrikeSharp Excluding Root By Default
+- Fix Plugin, Now Plugin Compatibility With Other Plugins (cs2fix + any cssharp plugins)
+- Fix Locally_IncludeTheseFlagsMessagesOnly,Locally_ExcludeFlagsMessages
+- Fix Discord_IncludeTheseFlagsMessagesOnly,Discord_ExcludeFlagsMessages
+- Fix MySql_IncludeTheseFlagsMessagesOnly,MySql_ExcludeFlagsMessages
+- Fix Mysql Table
+- Added Server IP Into Log Mysql
+
+#### **Web Interface**  
+- Added Multiple Servers
 
 ### [1.1.1]
 #### **General Changes**  
