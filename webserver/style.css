@@ -5,7 +5,6 @@
     --t-color: #ff7043;
     --ct-color: #42a5f5;
     
-    /* Light Mode Defaults */
     --bg: #f5f5f5;
     --text: #333;
     --table-header: #2c3e50;
@@ -15,6 +14,7 @@
     --toggle-bg: #2196f3;
     --hover-bg: rgba(250, 166, 26, 0.2);
     --active-bg: var(--accent);
+    --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 body.dark {
@@ -25,6 +25,7 @@ body.dark {
     --table-border: #333;
     --search-bg: #2d2d2d;
     --toggle-bg: #2d2d2d;
+    --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 body {
@@ -36,7 +37,6 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-/* Header Styles */
 .header-container {
     display: flex;
     justify-content: center;
@@ -69,7 +69,6 @@ body.dark .logo-inside-title {
     width: auto;
 }
 
-/* Theme Toggle */
 .theme-toggle {
     position: absolute;
     right: 20px;
@@ -194,13 +193,21 @@ input:checked + .slider-container .slider-ball .moon {
     transform: scale(1) rotate(0deg);
 }
 
-/* Search Box */
+.filters-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin: 1.5rem auto;
+    max-width: 1200px;
+    padding: 0 20px;
+}
+
 .searchBox {
     background: var(--search-bg);
     width: min(90%, 400px);
     border-radius: 40px;
     padding: 10px 20px;
-    margin: 1.5rem auto;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -209,7 +216,8 @@ input:checked + .slider-container .slider-ball .moon {
     transform: translateY(0);
     opacity: 1;
     animation: fadeInUp 0.5s ease-out;
-    border: 1px solid rgba(0,0,0,0.1);
+    border: 1px solid var(--table-border);
+    box-shadow: var(--dropdown-shadow);
 }
 
 body.dark .searchBox {
@@ -228,7 +236,7 @@ body.dark .searchBox {
 }
 
 .searchBox:focus-within {
-    box-shadow: 0 0 0 2px var(--accent);
+    box-shadow: 0 0 0 2px var(--accent), var(--dropdown-shadow);
     transform: scale(1.02);
 }
 
@@ -271,6 +279,54 @@ body.dark .searchBox {
     transition: all 0.3s ease;
 }
 
+.server-filter-form {
+    width: min(90%, 400px);
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.server-select {
+    background: var(--search-bg);
+    color: var(--text);
+    border: 2px solid var(--table-border);
+    border-radius: 10px;
+    padding: 10px 40px 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23faa61a'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 14px;
+    box-shadow: var(--dropdown-shadow);
+    width: 100%;
+    text-align: left;
+}
+
+.server-select:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(250, 166, 26, 0.2);
+    border-color: var(--accent);
+}
+
+.server-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(250, 166, 26, 0.2),
+                0 4px 16px rgba(250, 166, 26, 0.1);
+    border-color: var(--accent);
+}
+
+body.dark .server-select {
+    border-color: #404040;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+body.dark .server-select:hover {
+    box-shadow: 0 4px 16px rgba(250, 166, 26, 0.3);
+}
+
 .no-messages td {
     text-align: center;
     padding: 2rem !important;
@@ -286,8 +342,6 @@ body.dark .searchBox {
     font-weight: 600;
 }
 
-
-/* Chat Table */
 .chat-table {
     width: 100%;
     max-width: 1200px;
@@ -318,7 +372,6 @@ body.dark .chat-table {
     background-color: var(--table-row);
 }
 
-/* Message */
 .message {
     position: relative;
     padding-left: 15px;
@@ -342,7 +395,6 @@ body.dark .chat-table {
 .message.t { background-color: rgba(255, 112, 67, 0.1); }
 .message.ct { background-color: rgba(66, 165, 245, 0.1); }
 
-/* SteamID Link */
 .steamid {
     background: var(--table-header);
     color: white !important;
@@ -357,7 +409,6 @@ body.dark .chat-table {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Pagination */
 .pagination {
     text-align: center;
     margin: 2rem 0;
@@ -435,30 +486,16 @@ body.dark .chat-table {
     border-color: var(--accent);
 }
 
-/* Page Controls */
 .page-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin: 1.5rem auto;
     gap: 1rem;
-    animation: dropdownEntrance 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
     max-width: 1200px;
     padding: 0 20px;
 }
 
-@keyframes dropdownEntrance {
-    from {
-        opacity: 0;
-        transform: translateY(-10px) scale(0.98);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-/* Dropdown Styling */
 .per-page-form {
     position: relative;
     z-index: 1;
@@ -500,7 +537,6 @@ body.dark .chat-table {
     border-color: var(--accent);
 }
 
-/* Dark Mode */
 body.dark .per-page-select {
     border-color: #404040;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -510,8 +546,8 @@ body.dark .per-page-select:hover {
     box-shadow: 0 4px 16px rgba(250, 166, 26, 0.3);
 }
 
-/* Option */
-.per-page-select option {
+.per-page-select option,
+.server-select option {
     background: var(--search-bg);
     color: var(--text);
     padding: 8px 12px;
@@ -520,25 +556,11 @@ body.dark .per-page-select:hover {
     transition: all 0.2s ease;
 }
 
-.per-page-select option:hover {
+.per-page-select option:hover,
+.server-select option:hover {
     background: var(--hover-bg) !important;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .page-controls {
-        margin: 1rem auto;
-    }
-    
-    .per-page-select {
-        padding: 8px 32px 8px 12px;
-        min-width: 140px;
-        font-size: 0.9rem;
-        background-size: 14px;
-    }
-}
-
-/* Footer */
 .footer {
     text-align: center;
     margin-top: 2rem;
@@ -581,8 +603,6 @@ body.dark .version:hover {
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-
-/* Responsive Design */
 @media (max-width: 768px) {
     body {
         padding: 10px;
@@ -626,5 +646,40 @@ body.dark .version:hover {
     
     .page-info {
         font-size: 1rem;
+    }
+
+    .filters-container {
+        gap: 10px;
+    }
+    
+    .server-filter-form,
+    .searchBox {
+        width: min(95%, 100%);
+    }
+    
+    .page-controls {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .per-page-form {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    .per-page-select {
+        width: 100%;
+        min-width: 100%;
+    }
+}
+
+@media (min-width: 769px) {
+    .filters-container {
+        align-items: center;
+    }
+    
+    .server-filter-form {
+        width: min(90%, 400px);
     }
 }
