@@ -8,22 +8,16 @@ using CounterStrikeSharp.API.Modules.Entities.Constants;
 
 namespace Chat_Logger_GoldKingZ;
 
-public class PlayerChat
+public class SayText2
 {
-    public HookResult OnPlayerChat(CCSPlayerController? player, CommandInfo info, bool TeamChat)
-	{
-        var g_Main = ChatLoggerGoldKingZ.Instance.g_Main;
+    public HookResult OnSayText2(CCSPlayerController? player, string message, bool TeamChat)
+    {
         if (!player.IsValid())return HookResult.Continue;
 
-        Helper.AddPlayerInGlobals(player);
-
-        var eventmessage = info.ArgString;
-        eventmessage = eventmessage.TrimStart('"');
-        eventmessage = eventmessage.TrimEnd('"');
-        if (string.IsNullOrWhiteSpace(eventmessage)) return HookResult.Continue;
-
-        string trimmedMessageStart = eventmessage.TrimStart();
-        string message = trimmedMessageStart.TrimEnd();
+        if (!MainPlugin.Instance.g_Main.Player_Data.TryGetValue(player, out var handle)) return HookResult.Continue;
+        
+        if((DateTime.Now - handle.EventPlayerChat).TotalSeconds < 0.1)return HookResult.Continue;
+        handle.EventPlayerChat = DateTime.Now;
         
         Helper.LogLocally(player, message, TeamChat);
         Helper.LogMySql(player, message, TeamChat);

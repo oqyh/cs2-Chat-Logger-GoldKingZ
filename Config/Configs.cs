@@ -46,9 +46,6 @@ namespace Chat_Logger_GoldKingZ.Config
     }
     public static class Configs
     {
-        public static class Shared {
-            public static string? CookiesModule { get; set; }
-        }
         private static readonly string ConfigDirectoryName = "config";
         private static readonly string ConfigFileName = "config.json";
         private static string? _configFilePath;
@@ -89,25 +86,72 @@ namespace Chat_Logger_GoldKingZ.Config
             }
 
             _configFilePath = Path.Combine(configFileDirectory, ConfigFileName);
+            var defaultConfig = new ConfigData();
             if (File.Exists(_configFilePath))
             {
-                _configData = JsonSerializer.Deserialize<ConfigData>(File.ReadAllText(_configFilePath), SerializationOptions);
+                try
+                {
+                    _configData = JsonSerializer.Deserialize<ConfigData>(File.ReadAllText(_configFilePath), SerializationOptions);
+                }
+                catch (JsonException)
+                {
+                    _configData = MergeConfigWithDefaults(_configFilePath, defaultConfig);
+                }
+                
                 _configData!.Validate();
             }
             else
             {
-                _configData = new ConfigData();
+                _configData = defaultConfig;
                 _configData.Validate();
             }
 
-            if (_configData is null)
-            {
-                throw new Exception("Failed to load configs.");
-            }
-
             SaveConfigData(_configData);
-            
             return _configData;
+        }
+
+        private static ConfigData MergeConfigWithDefaults(string path, ConfigData defaults)
+        {
+            var mergedConfig = new ConfigData();
+            var jsonText = File.ReadAllText(path);
+            
+            var readerOptions = new JsonReaderOptions 
+            { 
+                AllowTrailingCommas = true,
+                CommentHandling = JsonCommentHandling.Skip 
+            };
+
+            using var doc = JsonDocument.Parse(jsonText, new JsonDocumentOptions
+            {
+                AllowTrailingCommas = true,
+                CommentHandling = JsonCommentHandling.Skip
+            });
+            
+            foreach (var jsonProp in doc.RootElement.EnumerateObject())
+            {
+                var propInfo = typeof(ConfigData).GetProperty(jsonProp.Name);
+                if (propInfo == null) continue;
+
+                try
+                {
+                    var jsonValue = JsonSerializer.Deserialize(
+                        jsonProp.Value.GetRawText(), 
+                        propInfo.PropertyType,
+                        new JsonSerializerOptions
+                        {
+                            Converters = { new JsonStringEnumConverter() },
+                            ReadCommentHandling = JsonCommentHandling.Skip
+                        }
+                    );
+                    propInfo.SetValue(mergedConfig, jsonValue);
+                }
+                catch (JsonException)
+                {
+                    propInfo.SetValue(mergedConfig, propInfo.GetValue(defaults));
+                }
+            }
+            
+            return mergedConfig;
         }
 
         private static void SaveConfigData(ConfigData configData)
@@ -115,9 +159,8 @@ namespace Chat_Logger_GoldKingZ.Config
             if (_configFilePath is null)
                 throw new Exception("Config not yet loaded.");
 
-            string json = JsonSerializer.Serialize(configData, SerializationOptions);
-            json = Regex.Unescape(json);
-
+            var json = JsonSerializer.Serialize(configData, SerializationOptions);
+            
             var lines = json.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
             var newLines = new List<string>();
 
@@ -200,9 +243,9 @@ namespace Chat_Logger_GoldKingZ.Config
                 set
                 {
                     _Version = value;
-                    if (_Version != ChatLoggerGoldKingZ.Instance.ModuleVersion)
+                    if (_Version != MainPlugin.Instance.ModuleVersion)
                     {
-                        Version = ChatLoggerGoldKingZ.Instance.ModuleVersion;
+                        Version = MainPlugin.Instance.ModuleVersion;
                     }
                 }
             }
@@ -221,18 +264,18 @@ namespace Chat_Logger_GoldKingZ.Config
             }
 
             [BreakLine("{space}----------------------------[ ↓ Locally Config ↓ ]----------------------------{space}")]
-            [Comment("Save Chat Messages Locally (In ../Chat-Logger-GoldKingZ/logs/)?\n1 = Yes, But Log When Player Chat Direct\n2 = Yes, But Log And Send All Messages When Round End (Recommended For Performance)\n3 = Yes, But Log And Send All Messages When Map End (Recommended For Performance)\n0 = No, Disable")]
-            [Range(0, 3, 1, "[Chat Logger] Locally_Enable: is invalid, setting to default value (1) Please Choose From 0 To 3.\n[Chat Logger] 1 = Yes, But Log When Player Chat Direct\n[Chat Logger] 2 = Yes, But Log And Send All Messages When Round End (Recommended For Performance)\n[Chat Logger] 3 = Yes, But Log And Send All Messages When Map End (Recommended For Performance)\n[Chat Logger] 0 = No, Disable This Feature")]
+            [Comment("Save Chat Messages Locally (In ../Chat-Logger-GoldKingZ/logs/)?\n0 = No, Disable\n1 = Yes, But Log When Player Chat Direct\n2 = Yes, But Log And Send All Messages When Round End (Recommended For Performance)\n3 = Yes, But Log And Send All Messages When Map End (Recommended For Performance)")]
+            [Range(0, 3, 1, "[Chat Logger] Locally_Enable: is invalid, setting to default value (1) Please Choose From 0 To 3.\n[Chat Logger] 0 = No, Disable This Feature\n[Chat Logger] 1 = Yes, But Log When Player Chat Direct\n[Chat Logger] 2 = Yes, But Log And Send All Messages When Round End (Recommended For Performance)\n[Chat Logger] 3 = Yes, But Log And Send All Messages When Map End (Recommended For Performance)")]
             public int Locally_Enable { get; set; }
 
             [Comment("Required [Locally_Enable = 1/2/3]\nLog Messages Only:\n1 = Both Public Chat And Team Chat\n2 = Public Chat Only\n3 = Team Chat Only")]
             [Range(1, 3, 1, "[Chat Logger] Locally_LogMessagesOnly: is invalid, setting to default value (1) Please Choose From 1 To 3.\n[Chat Logger] 1 = Both Public Chat And Team Chat\n[Chat Logger] 2 = Public Chat Only\n[Chat Logger] 3 = Team Chat Only")]
             public int Locally_LogMessagesOnly { get; set; }
 
-            [Comment("Required [Locally_Enable = 1/2/3]\nLog These Flags Messages Only And Ignore Log Others\nExample:\n!76561198206086993,@css/include,#css/include,include\n\"\" = To Log Everyone")]
+            [Comment("Required [Locally_Enable = 1/2/3]\nLog These Flags Messages Only And Ignore Log Others\nExample:\n\"SteamID: 76561198206086993,76561198974936845 | Flag: @css/vips,@css/admins | Group: #css/vips,#css/admins\"\n\"\" = To Log Everyone")]
             public string Locally_IncludeTheseFlagsMessagesOnly { get; set; }
 
-            [Comment("Required [Locally_Enable = 1/2/3]\nDont Log These Flags Messages And Log Others\nExample:\n!76561198206086993,@css/exclude,#css/exclude,exclude\n\"\" = To Exclude Everyone")]
+            [Comment("Required [Locally_Enable = 1/2/3]\nDont Log These Flags Messages And Log Others\nExample:\n\"SteamID: 76561198206086993,76561198974936845 | Flag: @css/vips,@css/admins | Group: #css/vips,#css/admins\"\n\"\" = To Exclude Everyone")]
             public string Locally_ExcludeFlagsMessages { get; set; }
             
             [Comment("Required [Locally_Enable = 1/2/3]\nDont Log Messages If It Start With\n\"\" = Disable This Feature")]
@@ -280,10 +323,10 @@ namespace Chat_Logger_GoldKingZ.Config
             [Range(1, 3, 1, "[Chat Logger] Discord_LogMessagesOnly: is invalid, setting to default value (1) Please Choose From 1 To 3.\n[Chat Logger] 1 = Both Public Chat And Team Chat\n[Chat Logger] 2 = Public Chat Only\n[Chat Logger] 3 = Team Chat Only")]
             public int Discord_LogMessagesOnly { get; set; }
 
-            [Comment("Required [Discord_WebHook]\nLog These Flags Messages Only And Ignore Log Others\nExample:\n!76561198206086993,@css/include,#css/include,include\n\"\" = To Log Everyone")]
+            [Comment("Required [Discord_WebHook]\nLog These Flags Messages Only And Ignore Log Others\nExample:\n\"SteamID: 76561198206086993,76561198974936845 | Flag: @css/vips,@css/admins | Group: #css/vips,#css/admins\"\n\"\" = To Log Everyone")]
             public string Discord_IncludeTheseFlagsMessagesOnly { get; set; }
 
-            [Comment("Required [Discord_WebHook]\nDont Log These Flags Messages And Log Others\nExample:\n!76561198206086993,@css/exclude,#css/exclude,exclude\n\"\" = To Exclude Everyone")]
+            [Comment("Required [Discord_WebHook]\nDont Log These Flags Messages And Log Others\nExample:\n\"SteamID: 76561198206086993,76561198974936845 | Flag: @css/vips,@css/admins | Group: #css/vips,#css/admins\"\n\"\" = To Exclude Everyone")]
             public string Discord_ExcludeFlagsMessages { get; set; }
             
             [Comment("Required [Discord_WebHook]\nDont Log Messages If It Start With\n\"\" = Disable This Feature")]
@@ -308,8 +351,8 @@ namespace Chat_Logger_GoldKingZ.Config
             [BreakLine("{space}----------------------------[ ↓ MySql Config ↓ ]----------------------------{space}")]
             
 
-            [Comment("Save Chat Messages Into MySql?\n1 = Yes, But Log When Player Chat Direct\n2 = Yes, But Log And Send All Messages When Round End (Recommended For Performance)\n3 = Yes, But Log And Send All Messages When Map End (Recommended For Performance)\n0 = No, Disable")]
-            [Range(0, 3, 1, "[Chat Logger] MySql_Enable: is invalid, setting to default value (1) Please Choose From 0 To 3.\n[Chat Logger] 1 = Yes, But Log When Player Chat Direct\n[Chat Logger] 2 = Yes, But Log And Send All Messages When Round End (Recommended For Performance)\n[Chat Logger] 3 = Yes, But Log And Send All Messages When Map End (Recommended For Performance)\n[Chat Logger] 0 = No, Disable This Feature")]
+            [Comment("Save Chat Messages Into MySql?\n0 = No, Disable\n1 = Yes, But Log When Player Chat Direct\n2 = Yes, But Log And Send All Messages When Round End (Recommended For Performance)\n3 = Yes, But Log And Send All Messages When Map End (Recommended For Performance)")]
+            [Range(0, 3, 0, "[Chat Logger] MySql_Enable: is invalid, setting to default value (0) Please Choose From 0 To 3.\n[Chat Logger] 0 = No, Disable\n[Chat Logger] 1 = Yes, But Log When Player Chat Direct\n[Chat Logger] 2 = Yes, But Log And Send All Messages When Round End (Recommended For Performance)\n[Chat Logger] 3 = Yes, But Log And Send All Messages When Map End (Recommended For Performance)")]
             public int MySql_Enable { get; set; }
 
             [Comment("MySql Host\nExample:\n123.45.67.89")]
@@ -331,10 +374,10 @@ namespace Chat_Logger_GoldKingZ.Config
             [Range(1, 3, 1, "[Chat Logger] MySql_LogMessagesOnly: is invalid, setting to default value (1) Please Choose From 1 To 3.\n[Chat Logger] 1 = Both Public Chat And Team Chat\n[Chat Logger] 2 = Public Chat Only\n[Chat Logger] 3 = Team Chat Only")]
             public int MySql_LogMessagesOnly { get; set; }
 
-            [Comment("Required [MySql_Enable = 1/2/3]\nLog These Flags Messages Only And Ignore Log Others\nExample:\n!76561198206086993,@css/include,#css/include,include\n\"\" = To Log Everyone")]
+            [Comment("Required [MySql_Enable = 1/2/3]\nLog These Flags Messages Only And Ignore Log Others\nExample:\n\"SteamID: 76561198206086993,76561198974936845 | Flag: @css/vips,@css/admins | Group: #css/vips,#css/admins\"\n\"\" = To Log Everyone")]
             public string MySql_IncludeTheseFlagsMessagesOnly { get; set; }
 
-            [Comment("Required [MySql_Enable = 1/2/3]\nDont Log These Flags Messages And Log Others\nExample:\n!76561198206086993,@css/exclude,#css/exclude,exclude\n\"\" = To Exclude Everyone")]
+            [Comment("Required [MySql_Enable = 1/2/3]\nDont Log These Flags Messages And Log Others\nExample:\n\"SteamID: 76561198206086993,76561198974936845 | Flag: @css/vips,@css/admins | Group: #css/vips,#css/admins\"\n\"\" = To Exclude Everyone")]
             public string MySql_ExcludeFlagsMessages { get; set; }
             
             [Comment("Required [MySql_Enable = 1/2/3]\nDont Log Messages If It Start With\n\"\" = Disable This Feature")]
@@ -357,13 +400,13 @@ namespace Chat_Logger_GoldKingZ.Config
             
             public ConfigData()
             {
-                Version = ChatLoggerGoldKingZ.Instance.ModuleVersion;
+                Version = MainPlugin.Instance.ModuleVersion;
                 Link = "https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ";
 
                 Locally_Enable = 1;
                 Locally_LogMessagesOnly = 1;
                 Locally_IncludeTheseFlagsMessagesOnly = "";
-                Locally_ExcludeFlagsMessages = "@css/exclude,#css/exclude";
+                Locally_ExcludeFlagsMessages = "Flags : @css/exclude | Groups : #css/exclude";
                 Locally_ExcludeMessagesStartWith = "!./";
                 Locally_ExcludeMessagesContainsLessThanXLetters = 0;
                 Locally_ExcludeMessagesDuplicate = false;
@@ -379,7 +422,7 @@ namespace Chat_Logger_GoldKingZ.Config
                 Discord_UsersWithNoAvatarImage = "https://github.com/oqyh/cs2-Chat-Logger-GoldKingZ/blob/main/Resources/avatar.jpg?raw=true";
                 Discord_LogMessagesOnly = 1;
                 Discord_IncludeTheseFlagsMessagesOnly = "";
-                Discord_ExcludeFlagsMessages = "@css/exclude,#css/exclude";
+                Discord_ExcludeFlagsMessages = "Flags : @css/exclude | Groups : #css/exclude";
                 Discord_ExcludeMessagesStartWith = "!./";
                 Discord_ExcludeMessagesContainsLessThanXLetters = 0;
                 Discord_ExcludeMessagesDuplicate = false;
@@ -395,7 +438,7 @@ namespace Chat_Logger_GoldKingZ.Config
                 MySql_Port = 3306;
                 MySql_LogMessagesOnly = 1;
                 MySql_IncludeTheseFlagsMessagesOnly = "";
-                MySql_ExcludeFlagsMessages = "@css/exclude,#css/exclude";
+                MySql_ExcludeFlagsMessages = "Flags : @css/exclude | Groups : #css/exclude";
                 MySql_ExcludeMessagesStartWith = "!./";
                 MySql_ExcludeMessagesContainsLessThanXLetters = 0;
                 MySql_ExcludeMessagesDuplicate = false;

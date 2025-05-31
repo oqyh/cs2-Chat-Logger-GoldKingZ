@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Text;
 using System.Drawing;
 using System.Text.Json;
+using CounterStrikeSharp.API.Modules.Entities;
 
 namespace Chat_Logger_GoldKingZ;
 
@@ -15,53 +16,129 @@ public class Helper
 {
     public static bool IsPlayerInGroupPermission(CCSPlayerController player, string groups)
     {
-        if (string.IsNullOrEmpty(groups))
-        {
-            return false;
-        }
-        var Groups = groups.Split(',');
-        foreach (var group in Groups)
-        {
-            if (string.IsNullOrEmpty(group))
-            {
-                continue;
-            }
-            string groupId = group[0] == '!' ? group.Substring(1) : group;
-            if (group[0] == '#' && AdminManager.PlayerInGroup(player, group))
-            {
-                return true;
-            }
-            else if (group[0] == '@' && AdminManager.PlayerHasPermissions(player, group))
-            {
-                return true;
-            }
-            else if (group[0] == '!' && player.AuthorizedSteamID != null && (groupId == player.AuthorizedSteamID.SteamId2.ToString() || groupId == player.AuthorizedSteamID.SteamId3.ToString().Trim('[', ']') ||
-            groupId == player.AuthorizedSteamID.SteamId32.ToString() || groupId == player.AuthorizedSteamID.SteamId64.ToString()))
-            {
-                return true;
-            }
-            else if (AdminManager.PlayerInGroup(player, group))
-            {
-                return true;
-            }
-        }
-        return false;
+        if (string.IsNullOrEmpty(groups) || player == null || !player.IsValid)return false;
+
+        return groups.Split('|')
+        .Select(segment => segment.Trim())
+        .Any(trimmedSegment => Permission_CheckPermissionSegment(player, trimmedSegment));
     }
-    
+    private static bool Permission_CheckPermissionSegment(CCSPlayerController player, string segment)
+    {
+        if (string.IsNullOrEmpty(segment))return false;
+
+        int colonIndex = segment.IndexOf(':');
+        if (colonIndex == -1 || colonIndex == 0)return false;
+
+        string prefix = segment.Substring(0, colonIndex).Trim().ToLower();
+        string values = segment.Substring(colonIndex + 1).Trim();
+
+        return prefix switch
+        {
+            "steamid" or "steamids" or "steam" or "steams" => Permission_CheckSteamIds(player, values),
+            "flag" or "flags" => Permission_CheckFlags(player, values),
+            "group" or "groups" => Permission_CheckGroups(player, values),
+            _ => false
+        };
+    }
+    private static bool Permission_CheckSteamIds(CCSPlayerController player, string steamIds)
+    {
+        steamIds = steamIds.Replace("[", "").Replace("]", "");
+
+        var (steam2, steam3, steam32, steam64) = player.SteamID.GetPlayerSteamID();
+        var steam3NoBrackets = steam3.Trim('[', ']');
+
+        return steamIds
+        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+        .Select(id => id.Trim())
+        .Any(trimmedId =>
+            string.Equals(trimmedId, steam2, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(trimmedId, steam3NoBrackets, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(trimmedId, steam32, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(trimmedId, steam64, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+    private static bool Permission_CheckFlags(CCSPlayerController player, string flags)
+    {
+        return flags.Split(',')
+        .Select(flag => flag.Trim())
+        .Where(trimmedFlag => trimmedFlag.StartsWith("@"))
+        .Any(trimmedFlag => MyPlayerHasPermissions(player, trimmedFlag));
+    }
+    private static bool Permission_CheckGroups(CCSPlayerController player, string groups)
+    {
+        return groups.Split(',')
+        .Select(group => group.Trim())
+        .Where(trimmedGroup => trimmedGroup.StartsWith("#"))
+        .Any(trimmedGroup => MyPlayerInGroup(player, trimmedGroup));
+    }
+    public static bool MyPlayerHasPermissions(CCSPlayerController player, params string[] flags)
+    {
+        if (player == null) return true;
+
+        if (!player.IsValid || player.Connected != PlayerConnectedState.PlayerConnected || player.IsBot || player.IsHLTV) return false;
+
+        var playerData = AdminManager.GetPlayerAdminData(player);
+        if (playerData == null) return false;
+
+        foreach (var domain in playerData.Flags)
+        {
+            if (string.IsNullOrEmpty(domain.Key)) continue;
+
+            var domainFlags = flags
+            .Where(flag => flag.StartsWith($"@{domain.Key}/"))
+            .ToArray();
+
+            if (domainFlags.Length == 0) continue;
+
+            if (!playerData.DomainHasFlags(domain.Key, domainFlags, true))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    public static bool MyPlayerInGroup(CCSPlayerController? player, params string[] groups)
+    {
+        if (player == null) return true;
+        
+        if (!player.IsValid || player.Connected != PlayerConnectedState.PlayerConnected || player.IsBot || player.IsHLTV)return false;
+        
+        return MyPlayerInGroup(player.AuthorizedSteamID, groups);
+    }
+    public static bool MyPlayerInGroup(SteamID? steamId, params string[] groups)
+    {
+        if (steamId == null)return false;
+
+        var playerData = AdminManager.GetPlayerAdminData(steamId);
+        if (playerData == null)return false;
+
+        var groupsToCheck = groups.ToHashSet();
+        foreach (var domain in playerData.Flags)
+        {
+            if (string.IsNullOrEmpty(domain.Key)) continue;
+
+            if (playerData.Flags[domain.Key].Contains("@" + domain.Key + "/*"))
+            {
+                groupsToCheck.ExceptWith(groups.Where(group => group.Contains(domain.Key + '/')));
+            }
+        }
+        return playerData.Groups.IsSupersetOf(groupsToCheck);
+    }
+
     public static void ClearVariables()
     {
-        var g_Main = ChatLoggerGoldKingZ.Instance.g_Main;
+        var g_Main = MainPlugin.Instance.g_Main;
         g_Main.Player_Data.Clear();
     }
 
     public static void AddPlayerInGlobals(CCSPlayerController player)
     {
         if (!player.IsValid())return;
-        var g_Main = ChatLoggerGoldKingZ.Instance.g_Main;
+        var g_Main = MainPlugin.Instance.g_Main;
 
         if(!g_Main.Player_Data.ContainsKey(player))
         {
-            g_Main.Player_Data.Add(player, new Globals.PlayerDataClass(player, "", "", ""));
+            g_Main.Player_Data.Add(player, new Globals.PlayerDataClass(player, "", "", "", DateTime.Now));
         }
     }
 
@@ -267,12 +344,12 @@ public class Helper
 
     public static void LogLocally(CCSPlayerController player, string message, bool TeamChat)
     {
-        var g_Main = ChatLoggerGoldKingZ.Instance.g_Main;
+        var g_Main = MainPlugin.Instance.g_Main;
         if (!player.IsValid() || string.IsNullOrEmpty(message))return;
 
-        string Fpath = Path.Combine(Configs.Shared.CookiesModule!,"../../plugins/Chat-Logger-GoldKingZ/logs/");
+        string Fpath = Path.Combine(MainPlugin.Instance.ModuleDirectory,"../../plugins/Chat-Logger-GoldKingZ/logs/");
         string fileName = DateTime.Now.ToString(Configs.GetConfigData().Locally_DateFormat) + ".txt";
-        string Tpath = Path.Combine(Configs.Shared.CookiesModule!,"../../plugins/Chat-Logger-GoldKingZ/logs/") + $"{fileName}";
+        string Tpath = Path.Combine(MainPlugin.Instance.ModuleDirectory,"../../plugins/Chat-Logger-GoldKingZ/logs/") + $"{fileName}";
         var Mapname = Server.MapName;
         var playername = player.PlayerName;
         var playersteamId2 = (player.AuthorizedSteamID != null) ? player.AuthorizedSteamID.SteamId2 : "InvalidSteamID";
@@ -283,8 +360,9 @@ public class Helper
         var playerip = GetPlayerIpAddress?.Split(':')[0] ?? "InValidIpAddress";
 
         if(Configs.GetConfigData().Locally_LogMessagesOnly == 2 && TeamChat || Configs.GetConfigData().Locally_LogMessagesOnly == 3 && !TeamChat)return;
-        if(!string.IsNullOrEmpty(Configs.GetConfigData().Locally_IncludeTheseFlagsMessagesOnly) && !IsPlayerInGroupPermission(player, Configs.GetConfigData().Locally_IncludeTheseFlagsMessagesOnly))return;
-        if(!string.IsNullOrEmpty(Configs.GetConfigData().Locally_ExcludeFlagsMessages) && IsPlayerInGroupPermission(player, Configs.GetConfigData().Locally_ExcludeFlagsMessages))return;
+
+        if (!string.IsNullOrEmpty(Configs.GetConfigData().Locally_IncludeTheseFlagsMessagesOnly) && !IsPlayerInGroupPermission(player, Configs.GetConfigData().Locally_IncludeTheseFlagsMessagesOnly)) return;
+        if (!string.IsNullOrEmpty(Configs.GetConfigData().Locally_ExcludeFlagsMessages) && IsPlayerInGroupPermission(player, Configs.GetConfigData().Locally_ExcludeFlagsMessages)) return;
         if (!string.IsNullOrEmpty(Configs.GetConfigData().Locally_ExcludeMessagesStartWith))
         {
             char[] excludeChars = Configs.GetConfigData().Locally_ExcludeMessagesStartWith.ToCharArray();
@@ -293,9 +371,8 @@ public class Helper
                 return;
             }
         }
-        if(Configs.GetConfigData().Locally_ExcludeMessagesContainsLessThanXLetters > 0 && message.Count() <= Configs.GetConfigData().Locally_ExcludeMessagesContainsLessThanXLetters)return;
-        if(Configs.GetConfigData().Locally_ExcludeMessagesDuplicate && g_Main.Player_Data.ContainsKey(player) && g_Main.Player_Data[player].Locally_LastMessage.Equals(message, StringComparison.OrdinalIgnoreCase))return;
-             
+        if (Configs.GetConfigData().Locally_ExcludeMessagesContainsLessThanXLetters > 0 && message.Count() <= Configs.GetConfigData().Locally_ExcludeMessagesContainsLessThanXLetters) return;
+        if (Configs.GetConfigData().Locally_ExcludeMessagesDuplicate && g_Main.Player_Data.ContainsKey(player) && g_Main.Player_Data[player].Locally_LastMessage.Equals(message, StringComparison.OrdinalIgnoreCase)) return;
         string chatteam = TeamChat ? "[TEAM] " : "";
         int chatType = (player.TeamNum << 1) | (TeamChat ? 1 : 0);
         string Time = DateTime.Now.ToString(Configs.GetConfigData().Locally_TimeFormat);
@@ -349,7 +426,7 @@ public class Helper
                 SteamID32 = playersteamId32,
                 SteamID64 = playersteamId64,
                 IpAdress = playerip,
-                Where = chatType,
+                Where = chatType
             });
         }
 
@@ -359,13 +436,12 @@ public class Helper
         }
     }
     
-
     public static void DelayLogLocally()
     {
-        var g_Main = ChatLoggerGoldKingZ.Instance.g_Main;
+        var g_Main = MainPlugin.Instance.g_Main;
         if (g_Main._chatMessages_Locally.Count > 0)
         {
-            string Fpath = Path.Combine(Configs.Shared.CookiesModule!, "../../plugins/Chat-Logger-GoldKingZ/logs/");
+            string Fpath = Path.Combine(MainPlugin.Instance.ModuleDirectory, "../../plugins/Chat-Logger-GoldKingZ/logs/");
             string fileName = DateTime.Now.ToString(Configs.GetConfigData().Locally_DateFormat) + ".txt";
             string Tpath = Path.Combine(Fpath, fileName);
 
@@ -382,10 +458,10 @@ public class Helper
                 }
 
                 var linesToWrite = new List<string>();
-                
+
                 foreach (var message in g_Main._chatMessages_Locally.Reverse())
                 {
-                    string formattedMessage = !string.IsNullOrEmpty(Configs.GetConfigData().Locally_MessageFormat) 
+                    string formattedMessage = !string.IsNullOrEmpty(Configs.GetConfigData().Locally_MessageFormat)
                         ? Configs.GetConfigData().Locally_MessageFormat.ReplaceMessages(
                             message.Date!,
                             message.Time!,
@@ -410,21 +486,19 @@ public class Helper
             }
         }
     }
-
     
-
     public static void LogMySql(CCSPlayerController player, string message, bool TeamChat)
     {
-        var g_Main = ChatLoggerGoldKingZ.Instance.g_Main;
-        if (!player.IsValid() || string.IsNullOrEmpty(message))return;
+        var g_Main = MainPlugin.Instance.g_Main;
+        if (!player.IsValid() || string.IsNullOrEmpty(message)) return;
 
         var Mapname = Server.MapName;
         var playername = player.PlayerName;
         var playersteamId64 = (player.AuthorizedSteamID != null) ? player.AuthorizedSteamID.SteamId64.ToString() : "InvalidSteamID";
 
-        if(Configs.GetConfigData().MySql_LogMessagesOnly == 2 && TeamChat || Configs.GetConfigData().MySql_LogMessagesOnly == 3 && !TeamChat)return;
-        if(!string.IsNullOrEmpty(Configs.GetConfigData().MySql_IncludeTheseFlagsMessagesOnly) && !IsPlayerInGroupPermission(player, Configs.GetConfigData().MySql_IncludeTheseFlagsMessagesOnly))return;
-        if(!string.IsNullOrEmpty(Configs.GetConfigData().MySql_ExcludeFlagsMessages) && IsPlayerInGroupPermission(player, Configs.GetConfigData().MySql_ExcludeFlagsMessages))return;
+        if (Configs.GetConfigData().MySql_LogMessagesOnly == 2 && TeamChat || Configs.GetConfigData().MySql_LogMessagesOnly == 3 && !TeamChat) return;
+        if (!string.IsNullOrEmpty(Configs.GetConfigData().MySql_IncludeTheseFlagsMessagesOnly) && !IsPlayerInGroupPermission(player, Configs.GetConfigData().MySql_IncludeTheseFlagsMessagesOnly)) return;
+        if (!string.IsNullOrEmpty(Configs.GetConfigData().MySql_ExcludeFlagsMessages) && IsPlayerInGroupPermission(player, Configs.GetConfigData().MySql_ExcludeFlagsMessages)) return;
         if (!string.IsNullOrEmpty(Configs.GetConfigData().MySql_ExcludeMessagesStartWith))
         {
             char[] excludeChars = Configs.GetConfigData().MySql_ExcludeMessagesStartWith.ToCharArray();
@@ -433,15 +507,15 @@ public class Helper
                 return;
             }
         }
-        if(Configs.GetConfigData().MySql_ExcludeMessagesContainsLessThanXLetters > 0 && message.Count() <= Configs.GetConfigData().MySql_ExcludeMessagesContainsLessThanXLetters)return;
-        if(Configs.GetConfigData().MySql_ExcludeMessagesDuplicate && g_Main.Player_Data.ContainsKey(player) && g_Main.Player_Data[player].MySql_LastMessage.Equals(message, StringComparison.OrdinalIgnoreCase))return;
-             
+        if (Configs.GetConfigData().MySql_ExcludeMessagesContainsLessThanXLetters > 0 && message.Count() <= Configs.GetConfigData().MySql_ExcludeMessagesContainsLessThanXLetters) return;
+        if (Configs.GetConfigData().MySql_ExcludeMessagesDuplicate && g_Main.Player_Data.ContainsKey(player) && g_Main.Player_Data[player].MySql_LastMessage.Equals(message, StringComparison.OrdinalIgnoreCase)) return;
+
         string chatteam = TeamChat ? "[TEAM] " : "";
         int chatType = (player.TeamNum << 1) | (TeamChat ? 1 : 0);
-        
-        if(Configs.GetConfigData().MySql_Enable == 1)
+
+        if (Configs.GetConfigData().MySql_Enable == 1)
         {
-            _ = Task.Run(async () => 
+            _ = Task.Run(async () =>
             {
                 try
                 {
@@ -451,7 +525,8 @@ public class Helper
                         playersteamId64,
                         playername,
                         chatType,
-                        message
+                        message,
+                        g_Main.ServerPublicIpAdress
                     );
                 }
                 catch (Exception ex)
@@ -459,7 +534,8 @@ public class Helper
                     DebugMessage($"Failed to insert chat log: {ex.Message}");
                 }
             });
-        }else 
+        }
+        else
         {
             g_Main._chatMessages_Mysql.Add(new Globals.ChatMessageStorage
             {
@@ -468,24 +544,24 @@ public class Helper
                 Message = message,
                 SteamID64 = playersteamId64,
                 Where = chatType,
+                ServerId = g_Main.ServerPublicIpAdress
             });
         }
 
-        if(g_Main.Player_Data.ContainsKey(player) && !g_Main.Player_Data[player].MySql_LastMessage.Equals(message, StringComparison.OrdinalIgnoreCase))
+        if (g_Main.Player_Data.ContainsKey(player) && !g_Main.Player_Data[player].MySql_LastMessage.Equals(message, StringComparison.OrdinalIgnoreCase))
         {
             g_Main.Player_Data[player].MySql_LastMessage = message;
         }
     }
     
-
     public static void DelayLogMySql()
     {
-        var g_Main = ChatLoggerGoldKingZ.Instance.g_Main;
+        var g_Main = MainPlugin.Instance.g_Main;
         if (g_Main._chatMessages_Mysql.Count > 0)
         {
-            _ = Task.Run(async () => 
+            _ = Task.Run(async () =>
             {
-                try 
+                try
                 {
                     var messagesToInsert = new List<Globals.ChatMessageStorage>();
                     while (g_Main._chatMessages_Mysql.TryTake(out var message))
@@ -494,7 +570,7 @@ public class Helper
                     }
 
                     await MySqlDataManager.BatchInsertMessages(messagesToInsert);
-                    
+
                 }
                 catch (Exception ex)
                 {
@@ -514,7 +590,7 @@ public class Helper
     {
         if(string.IsNullOrEmpty(Configs.GetConfigData().Discord_WebHook))return;
 
-        var g_Main = ChatLoggerGoldKingZ.Instance.g_Main;
+        var g_Main = MainPlugin.Instance.g_Main;
         if (!player.IsValid() || string.IsNullOrEmpty(message))return;
 
         var Mapname = Server.MapName;
